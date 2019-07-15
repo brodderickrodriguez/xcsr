@@ -26,4 +26,19 @@ class Environment:
         raise NotImplementedError
 
     def human_play(self, reinforcement_program):
-        raise NotImplementedError
+        while not reinforcement_program.termination_criteria_met():
+            self.print_world()
+
+            state = self.get_state()
+
+            try:
+                action = int(input('input action: '))
+            except ValueError:
+                print('invalid action')
+                continue
+
+            self.step(action)
+
+            print('reward:\t', reinforcement_program.determine_rho(state, action))
+            print('eop?:\t', reinforcement_program.end_of_program)
+            print()
