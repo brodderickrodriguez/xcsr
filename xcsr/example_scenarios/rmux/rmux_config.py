@@ -17,7 +17,7 @@ class RMUXConfiguration(Configuration):
         self.is_multi_step = False
 
         # the maximum size of the population (in micro-classifiers)
-        self.N = 400
+        self.N = 1200
 
         # learning rate for payoff, epsilon, fitness, and action_set_size
         self.beta = 0.2
