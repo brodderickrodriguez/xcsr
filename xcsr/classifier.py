@@ -2,6 +2,8 @@
 # Auburn University - CSSE
 # June 6 2019
 
+import numpy as np
+
 
 class Classifier:
 	WILDCARD_ATTRIBUTE_VALUE = '#'
@@ -17,7 +19,10 @@ class Classifier:
 
 		# condition that specifies the sensory situation
 		# which the classifier applies to
-		self.condition = [0 for _ in range(self.state_length)]
+		self.condition = [np.random.uniform() for _ in range(self.state_length)]
+
+		# the interval predicate i.e. ranges which this classifier applies to
+		self.interval_predicate = [np.random.uniform(0.5) for _ in range(self.state_length)]
 
 		# action the classifier proposes
 		self.action = None
@@ -48,12 +53,16 @@ class Classifier:
 		self.numerosity = 1
 
 	def __str__(self):
-		s = '\nid: {id}\n\tcondition: {cond}, action: {act}\n\tpred:\t{pred} \
-				\n\terror:\t{err}\n\tfit:\t{fit} \
-				\n\tnum:\t{num}\n\texp:\t{exp}\n\t'.format(
-					id=self.id, cond=self.condition, act=self.action,
-					pred=self.predicted_payoff, err=self.epsilon,
-					fit=self.fitness, num=self.numerosity, exp=self.experience)
+		return self._to_string_detailed()
+
+	def _to_string_simple(self):
+		s = '{id} | '
+		return s
+
+	def _to_string_detailed(self):
+		cond = ''.join(['{:.2f}, {:.2f}|'.format(ci, ipi) for ci, ipi in zip(self.condition, self.interval_predicate)])
+		s = '{id} |{cond} act: {act} rho: {rho} err: {e} fit: {f} num: {n}'.format(id=self.id, cond=cond, act=self.action,
+				rho=self.predicted_payoff, e=self.epsilon, f=self.fitness, n=self.numerosity)
 		return s
 
 	def __repr__(self):
@@ -76,8 +85,8 @@ class Classifier:
 		return count
 
 	def matches_sigma(self, sigma):
-		for ci, si in zip(self.condition, sigma):
-			if ci != Classifier.WILDCARD_ATTRIBUTE_VALUE and ci != si:
+		for ci, ipi, si in zip(self.condition, self.interval_predicate, sigma):
+			if not (ci - ipi <= si < ci + ipi):
 				return False
 		return True
 
@@ -95,25 +104,16 @@ class Classifier:
 		return False
 
 	def is_more_general(self, other):
-		# count the number of wildcards in cl_gen
-		wildcard_count = self.count_wildcards()
+		for i in range(self.state_length):
+			other_lower_bound = other.condition[i] - other.interval_predicate[i]
+			other_upper_bound = other.condition[i] + other.interval_predicate[i]
 
-		# count the number of wildcards in cl_spec
-		other_wildcard_count = other.count_wildcards()
+			this_lower_bound = self.condition[i] - self.interval_predicate[i]
+			this_upper_bound = self.condition[i] + self.interval_predicate[i]
 
-		# if cl_gen is not more general than cl_spec
-		if wildcard_count <= other_wildcard_count:
-			return False
-
-		# for each attribute index i in the classifiers condition
-		for i in range(self.config.condition_length):
-			# if the condition for cl_gen is not the wildcard
-			# and cl_gen condition[i] does not match cl_spec condition[i]
-			if self.condition[i] != Classifier.WILDCARD_ATTRIBUTE_VALUE and self.condition[i] != other.condition[i]:
-				# then cl_gen is not more general than cl_spec
+			if other_lower_bound < this_lower_bound or other_upper_bound > this_upper_bound:
 				return False
 
-		# otherwise, cl_gen is more general than cl_spec
 		return True
 
 	def could_subsume(self):
