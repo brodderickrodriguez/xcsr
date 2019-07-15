@@ -6,11 +6,12 @@ import numpy as np
 
 
 class Classifier:
-	WILDCARD_ATTRIBUTE_VALUE = '#'
+	# WILDCARD_ATTRIBUTE_VALUE = '#'
 	CLASSIFIER_ID = 0
 
 	def __init__(self, config, state_length):
 		self.id = Classifier.CLASSIFIER_ID
+		Classifier.CLASSIFIER_ID += 1
 		Classifier.CLASSIFIER_ID += 1
 
 		self.config = config
@@ -22,7 +23,7 @@ class Classifier:
 		self.condition = [np.random.uniform() for _ in range(self.state_length)]
 
 		# the interval predicate i.e. ranges which this classifier applies to
-		self.interval_predicate = [np.random.uniform(0.5) for _ in range(self.state_length)]
+		self.interval_predicate = [np.random.uniform(high=0.5) for _ in range(self.state_length)]
 
 		# action the classifier proposes
 		self.action = None
@@ -47,7 +48,7 @@ class Classifier:
 
 		# (as) average size of the action_set this classifier
 		# belongs to
-		self.action_set_size = 0
+		self.action_set_size = 1
 
 		# number of micro-classifiers this classifier represents
 		self.numerosity = 1
@@ -80,9 +81,9 @@ class Classifier:
 		other.__dict__ = self.__dict__
 		return other
 
-	def count_wildcards(self):
-		count = sum([1 if x == Classifier.WILDCARD_ATTRIBUTE_VALUE else 0 for x in self.condition])
-		return count
+	# def count_wildcards(self):
+	# 	count = sum([1 if x == Classifier.WILDCARD_ATTRIBUTE_VALUE else 0 for x in self.condition])
+	# 	return count
 
 	def matches_sigma(self, sigma):
 		for ci, ipi, si in zip(self.condition, self.interval_predicate, sigma):
@@ -90,18 +91,13 @@ class Classifier:
 				return False
 		return True
 
-	def does_subsume(self, cl_tos):
-		# if cl_sub and cl_tos have the same action
-		if self.action == cl_tos.action:
-			# if cl_sub is allowed to subsume another classifier
-			if self.could_subsume():
-				# is cl_sub is more general than cl_tos
-				if self.is_more_general(cl_tos):
-					# then cl_sub does subsume cl_tos
-					return True
+	def does_subsume(self, other):
+		if other is None:
+			return True
 
-		# otherwise, cl_sub does not subsume cl_tos
-		return False
+		# if self and other have the same action and self can subsume and self is more general than other
+		# then self does subsume other, otherwise, self does not subsume other
+		return self.action == other.action and self.could_subsume() and self.is_more_general(other)
 
 	def is_more_general(self, other):
 		for i in range(self.state_length):
@@ -133,12 +129,10 @@ class Classifier:
 		# compute the vote-value for this classifier
 		vote = self.action_set_size * self.numerosity
 
-		# compute the weighted fitness of this classifier
-		# accounting for the classifier's numerosity
+		# compute the weighted fitness of this classifier accounting for the classifier's numerosity
 		fitness_per_numerosity = self.fitness / self.numerosity
 
-		# if this classifier's experience > the deletion threshold
-		# and fitness_per_numerosity < the fraction
+		# if this classifier's experience > the deletion threshold and fitness_per_numerosity < the fraction
 		# of the mean fitness in population * the average fitness
 		if self.experience > self.config.theta_del and \
 			fitness_per_numerosity < (self.config.delta * avg_fitness_in_population):
