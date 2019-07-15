@@ -11,18 +11,15 @@ class Configuration:
         # the maximum number of steps in each problem (repetition)
         self.episodes_per_repetition = 10 ** 4
 
-        self.steps_per_episode = 100
+        self.steps_per_episode = 1
 
-        self.is_multi_step = True
+        self.is_multi_step = False
 
         # the maximum size of the population (in micro-classifiers)
-        self.N = 800
-
-        self.mu = 0.01
-        self.p_sharp = 0.5
+        self.N = 100
 
         # learning rate for payoff, epsilon, fitness, and action_set_size
-        self.beta = 0.1
+        self.beta = np.random.uniform(0.1, 0.9)
 
         # used to calculate the fitness of a classifier
         self.alpha = 0.1
