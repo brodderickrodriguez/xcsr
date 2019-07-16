@@ -12,7 +12,7 @@ class RMUXConfiguration(Configuration):
         # the maximum number of
         self.episodes_per_repetition = 1
 
-        self.steps_per_episode = 10000
+        self.steps_per_episode = 4 * 10 ** 3
 
         self.is_multi_step = False
 
