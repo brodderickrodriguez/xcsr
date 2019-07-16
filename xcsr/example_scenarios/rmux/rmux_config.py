@@ -81,4 +81,4 @@ class RMUXConfiguration(Configuration):
 
         # boolean parameter. specifies if action sets are to be tested
         # for subsuming classifiers
-        self.do_action_set_subsumption = False
+        self.do_action_set_subsumption = True
