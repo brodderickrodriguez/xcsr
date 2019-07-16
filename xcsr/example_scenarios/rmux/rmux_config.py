@@ -12,14 +12,14 @@ class RMUXConfiguration(Configuration):
         # the maximum number of
         self.episodes_per_repetition = 1
 
-        self.steps_per_episode = 4 * 10 ** 3
+        self.steps_per_episode = 1 * 10 ** 4
 
         self.is_multi_step = False
 
         self.interval_predicate_0 = 0.5
 
         # the maximum size of the population (in micro-classifiers)
-        self.N = 800
+        self.N = 1000
 
         # learning rate for payoff, epsilon, fitness, and action_set_size
         self.beta = 0.2
