@@ -17,6 +17,9 @@ class Configuration:
 
         self.interval_predicate_0 = 0.5
         self.interval_predicate_1 = 0.1
+        self.theta_interval_predicate = 0.1
+
+        self.do_action_set_combination = False
 
         # the maximum size of the population (in micro-classifiers)
         self.N = 100
