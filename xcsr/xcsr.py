@@ -167,14 +167,8 @@ class XCSR:
 
         # for each attribute in cl's condition
         for i in range(self.env.state_length):
-            # if a random number is less than the probability of assigning
-            # a wildcard '#'
-            if np.random.uniform() < self.config.p_sharp:
-                # assign it to a wildcard '#'
-                cl.condition[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
-            else:
-                # otherwise, match the condition attribute in sigma
-                cl.condition[i] = sigma[i]
+            # set the condition to match sigma
+            cl.condition[i] = sigma[i]
 
         # assign a random action to this classifier that is not
         # found in the match_set
@@ -527,14 +521,7 @@ class XCSR:
             # if some random number is less than
             # the probability of mutating an allele in the offspring
             if np.random.uniform() < self.config.mu:
-                # child.condition[i] = sigma[i]
-                # if the attribute at index i is already the wildcard
-                if child.condition[i] == Classifier.WILDCARD_ATTRIBUTE_VALUE:
-                    # swap it with the i-th attribute in sigma
-                    child.condition[i] = sigma[i]
-                else:
-                    # otherwise, swap it to the wildcard
-                    child.condition[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
+                child.condition[i] = sigma[i]
 
         # if some random number is less than
         # the probability of mutating an allele in the offspring
