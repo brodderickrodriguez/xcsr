@@ -17,9 +17,13 @@ class RMUXConfiguration(Configuration):
         self.is_multi_step = False
 
         self.interval_predicate_0 = 0.5
+        self.interval_predicate_1 = 0.1
+        self.theta_interval_predicate = 0.1
+
+        self.do_action_set_combination = True
 
         # the maximum size of the population (in micro-classifiers)
-        self.N = 1000
+        self.N = 700
 
         # learning rate for payoff, epsilon, fitness, and action_set_size
         self.beta = 0.2
@@ -77,8 +81,8 @@ class RMUXConfiguration(Configuration):
 
         # boolean parameter. specifies if offspring are to be tested
         # for possible subsumption by parents
-        self.do_ga_subsumption = True
+        self.do_ga_subsumption = False
 
         # boolean parameter. specifies if action sets are to be tested
         # for subsuming classifiers
-        self.do_action_set_subsumption = True
+        self.do_action_set_subsumption = False
