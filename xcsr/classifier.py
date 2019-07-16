@@ -6,7 +6,6 @@ import numpy as np
 
 
 class Classifier:
-	WILDCARD_ATTRIBUTE_VALUE = '#'
 	CLASSIFIER_ID = 0
 
 	def __init__(self, config, state_length):
@@ -71,12 +70,11 @@ class Classifier:
 		return other
 
 	def count_wildcards(self):
-		count = sum([1 if x == Classifier.WILDCARD_ATTRIBUTE_VALUE else 0 for x in self.condition])
-		return count
+		return 0
 
 	def matches_sigma(self, sigma):
 		for ci, si in zip(self.condition, sigma):
-			if ci != Classifier.WILDCARD_ATTRIBUTE_VALUE and ci != si:
+			if ci != si:
 				return False
 		return True
 
@@ -93,26 +91,15 @@ class Classifier:
 		# otherwise, cl_sub does not subsume cl_tos
 		return False
 
-
 	def interval_subsumes(self, other):
 		pass
 
 	def is_more_general(self, other):
-		# count the number of wildcards in cl_gen
-		wildcard_count = self.count_wildcards()
-
-		# count the number of wildcards in cl_spec
-		other_wildcard_count = other.count_wildcards()
-
-		# if cl_gen is not more general than cl_spec
-		if wildcard_count <= other_wildcard_count:
-			return False
-
 		# for each attribute index i in the classifiers condition
 		for i in range(self.state_length):
 			# if the condition for cl_gen is not the wildcard
 			# and cl_gen condition[i] does not match cl_spec condition[i]
-			if self.condition[i] != Classifier.WILDCARD_ATTRIBUTE_VALUE and self.condition[i] != other.condition[i]:
+			if self.condition[i] != other.condition[i]:
 				# then cl_gen is not more general than cl_spec
 				return False
 
