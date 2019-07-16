@@ -2,6 +2,8 @@
 # Auburn University - CSSE
 # July 12 2019
 
+import numpy as np
+
 
 class Classifier:
 	WILDCARD_ATTRIBUTE_VALUE = '#'
@@ -19,7 +21,9 @@ class Classifier:
 		# which the classifier applies to
 		self.condition = [0 for _ in range(self.state_length)]
 
-		self.interval_predicate = [0 for _ in range(self.state_length)]
+		ip = [np.random.uniform(low=-self.config.interval_predicate_0, high=self.config.interval_predicate_0)
+								for _ in range(self.state_length)]
+		self.interval_predicate = ip
 
 		# action the classifier proposes
 		self.action = None
