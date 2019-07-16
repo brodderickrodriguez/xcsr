@@ -122,19 +122,14 @@ class Classifier:
 		# compute the vote-value for this classifier
 		vote = self.action_set_size * self.numerosity
 
-		# compute the weighted fitness of this classifier
-		# accounting for the classifier's numerosity
+		# compute the weighted fitness of this classifier accounting for the classifier's numerosity
 		fitness_per_numerosity = self.fitness / self.numerosity
 
-		# if this classifier's experience > the deletion threshold
-		# and fitness_per_numerosity < the fraction
+		# if this classifier's experience > the deletion threshold and fitness_per_numerosity < the fraction
 		# of the mean fitness in population * the average fitness
 		if self.experience > self.config.theta_del and \
 			fitness_per_numerosity < (self.config.delta * avg_fitness_in_population):
 			# set the vote to vote * average fitness / fitness_per_numerosity
-			try:
-				vote = (vote * avg_fitness_in_population) / fitness_per_numerosity
-			except OverflowError:
-				print('classifier delete vote overflow {} {} {}'.format(vote, avg_fitness_in_population, fitness_per_numerosity))
+			vote = (vote * avg_fitness_in_population) / fitness_per_numerosity
 
 		return vote
