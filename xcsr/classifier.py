@@ -20,8 +20,7 @@ class Classifier:
 		# which the classifier applies to
 		self.condition = [0 for _ in range(self.state_length)]
 
-		ip = [np.random.uniform(low=-self.config.interval_predicate_0, high=self.config.interval_predicate_0)
-								for _ in range(self.state_length)]
+		ip = [np.random.uniform(high=self.config.interval_predicate_0) for _ in range(self.state_length)]
 		self.interval_predicate = ip
 
 		# action the classifier proposes
@@ -73,8 +72,8 @@ class Classifier:
 		return 0
 
 	def matches_sigma(self, sigma):
-		for ci, si in zip(self.condition, sigma):
-			if ci != si:
+		for ci, ipi, si in zip(self.condition, self.interval_predicate, sigma):
+			if not ci - ipi <= si <= ci + ipi:
 				return False
 		return True
 
@@ -91,16 +90,16 @@ class Classifier:
 		# otherwise, cl_sub does not subsume cl_tos
 		return False
 
-	def interval_subsumes(self, other):
-		pass
-
 	def is_more_general(self, other):
 		# for each attribute index i in the classifiers condition
 		for i in range(self.state_length):
-			# if the condition for cl_gen is not the wildcard
-			# and cl_gen condition[i] does not match cl_spec condition[i]
-			if self.condition[i] != other.condition[i]:
-				# then cl_gen is not more general than cl_spec
+			other_min = other.condition[i] - other.interval_predicate[i]
+			other_max = other.condition[i] + other.interval_predicate[i]
+
+			self_min = self.condition[i] - self.interval_predicate[i]
+			self_max = self.condition[i] + self.interval_predicate[i]
+
+			if other_min < self_min or other_max > self_max:
 				return False
 
 		# otherwise, cl_gen is more general than cl_spec
