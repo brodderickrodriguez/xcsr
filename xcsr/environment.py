@@ -1,6 +1,6 @@
 # Brodderick Rodriguez
 # Auburn University - CSSE
-# June 28 2019
+# July 12 2019
 
 import logging
 
@@ -14,16 +14,16 @@ class Environment:
         self.possible_actions = []
 
     def get_state(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def step(self, action):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def reset(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def print_world(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def human_play(self, reinforcement_program):
         while not reinforcement_program.termination_criteria_met():

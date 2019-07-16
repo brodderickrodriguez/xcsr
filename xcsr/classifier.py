@@ -1,17 +1,14 @@
 # Brodderick Rodriguez
 # Auburn University - CSSE
-# June 6 2019
-
-import numpy as np
+# July 12 2019
 
 
 class Classifier:
-	# WILDCARD_ATTRIBUTE_VALUE = '#'
+	WILDCARD_ATTRIBUTE_VALUE = '#'
 	CLASSIFIER_ID = 0
 
 	def __init__(self, config, state_length):
 		self.id = Classifier.CLASSIFIER_ID
-		Classifier.CLASSIFIER_ID += 1
 		Classifier.CLASSIFIER_ID += 1
 
 		self.config = config
@@ -20,10 +17,9 @@ class Classifier:
 
 		# condition that specifies the sensory situation
 		# which the classifier applies to
-		self.condition = [np.random.uniform() for _ in range(self.state_length)]
+		self.condition = [0 for _ in range(self.state_length)]
 
-		# the interval predicate i.e. ranges which this classifier applies to
-		self.interval_predicate = [np.random.uniform(high=0.5) for _ in range(self.state_length)]
+		self.interval_predicate = [0 for _ in range(self.state_length)]
 
 		# action the classifier proposes
 		self.action = None
@@ -54,62 +50,69 @@ class Classifier:
 		self.numerosity = 1
 
 	def __str__(self):
-		return self._to_string_detailed()
-
-	def _to_string_simple(self):
-		s = '{id} | '
-		return s
-
-	def _to_string_detailed(self):
-		cond = ''.join(['{:.2f}, {:.2f}|'.format(ci, ipi) for ci, ipi in zip(self.condition, self.interval_predicate)])
-		s = '{id} |{cond} act: {act} rho: {rho} err: {e} fit: {f} num: {n}'.format(id=self.id, cond=cond, act=self.action,
-				rho=self.predicted_payoff, e=self.epsilon, f=self.fitness, n=self.numerosity)
+		s = '\nid: {id}\n\tcondition: {cond}, action: {act}\n\tpred:\t{pred} \
+				\n\terror:\t{err}\n\tfit:\t{fit} \
+				\n\tnum:\t{num}\n\texp:\t{exp}\n\t'.format(
+					id=self.id, cond=self.condition, act=self.action,
+					pred=self.predicted_payoff, err=self.epsilon,
+					fit=self.fitness, num=self.numerosity, exp=self.experience)
 		return s
 
 	def __repr__(self):
 		return self.__str__()
-
-	def to_dict(self):
-		pass
-
-	@staticmethod
-	def from_dict():
-		pass
 
 	def copy(self):
 		other = Classifier(self.config, self.state_length)
 		other.__dict__ = self.__dict__
 		return other
 
-	# def count_wildcards(self):
-	# 	count = sum([1 if x == Classifier.WILDCARD_ATTRIBUTE_VALUE else 0 for x in self.condition])
-	# 	return count
+	def count_wildcards(self):
+		count = sum([1 if x == Classifier.WILDCARD_ATTRIBUTE_VALUE else 0 for x in self.condition])
+		return count
 
 	def matches_sigma(self, sigma):
-		for ci, ipi, si in zip(self.condition, self.interval_predicate, sigma):
-			if not (ci - ipi <= si < ci + ipi):
+		for ci, si in zip(self.condition, sigma):
+			if ci != Classifier.WILDCARD_ATTRIBUTE_VALUE and ci != si:
 				return False
 		return True
 
-	def does_subsume(self, other):
-		if other is None:
-			return True
+	def does_subsume(self, cl_tos):
+		# if cl_sub and cl_tos have the same action
+		if self.action == cl_tos.action:
+			# if cl_sub is allowed to subsume another classifier
+			if self.could_subsume():
+				# is cl_sub is more general than cl_tos
+				if self.is_more_general(cl_tos):
+					# then cl_sub does subsume cl_tos
+					return True
 
-		# if self and other have the same action and self can subsume and self is more general than other
-		# then self does subsume other, otherwise, self does not subsume other
-		return self.action == other.action and self.could_subsume() and self.is_more_general(other)
+		# otherwise, cl_sub does not subsume cl_tos
+		return False
+
+
+	def interval_subsumes(self, other):
+		pass
 
 	def is_more_general(self, other):
+		# count the number of wildcards in cl_gen
+		wildcard_count = self.count_wildcards()
+
+		# count the number of wildcards in cl_spec
+		other_wildcard_count = other.count_wildcards()
+
+		# if cl_gen is not more general than cl_spec
+		if wildcard_count <= other_wildcard_count:
+			return False
+
+		# for each attribute index i in the classifiers condition
 		for i in range(self.state_length):
-			other_lower_bound = other.condition[i] - other.interval_predicate[i]
-			other_upper_bound = other.condition[i] + other.interval_predicate[i]
-
-			this_lower_bound = self.condition[i] - self.interval_predicate[i]
-			this_upper_bound = self.condition[i] + self.interval_predicate[i]
-
-			if other_lower_bound < this_lower_bound or other_upper_bound > this_upper_bound:
+			# if the condition for cl_gen is not the wildcard
+			# and cl_gen condition[i] does not match cl_spec condition[i]
+			if self.condition[i] != Classifier.WILDCARD_ATTRIBUTE_VALUE and self.condition[i] != other.condition[i]:
+				# then cl_gen is not more general than cl_spec
 				return False
 
+		# otherwise, cl_gen is more general than cl_spec
 		return True
 
 	def could_subsume(self):
@@ -129,14 +132,19 @@ class Classifier:
 		# compute the vote-value for this classifier
 		vote = self.action_set_size * self.numerosity
 
-		# compute the weighted fitness of this classifier accounting for the classifier's numerosity
+		# compute the weighted fitness of this classifier
+		# accounting for the classifier's numerosity
 		fitness_per_numerosity = self.fitness / self.numerosity
 
-		# if this classifier's experience > the deletion threshold and fitness_per_numerosity < the fraction
+		# if this classifier's experience > the deletion threshold
+		# and fitness_per_numerosity < the fraction
 		# of the mean fitness in population * the average fitness
 		if self.experience > self.config.theta_del and \
 			fitness_per_numerosity < (self.config.delta * avg_fitness_in_population):
 			# set the vote to vote * average fitness / fitness_per_numerosity
-			vote = (vote * avg_fitness_in_population) / fitness_per_numerosity
+			try:
+				vote = (vote * avg_fitness_in_population) / fitness_per_numerosity
+			except OverflowError:
+				print('classifier delete vote overflow {} {} {}'.format(vote, avg_fitness_in_population, fitness_per_numerosity))
 
 		return vote

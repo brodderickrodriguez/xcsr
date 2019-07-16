@@ -1,6 +1,6 @@
 # Brodderick Rodriguez
 # Auburn University - CSSE
-# June 28 2019
+# July 12 2019
 
 import logging
 from xcsr.configuration import Configuration
@@ -18,11 +18,14 @@ class ReinforcementProgram:
         except AttributeError:
             self.max_steps = Configuration().steps_per_episode
 
+    def step(self):
+        self.time_step += 1
+
     def determine_rho(self, sigma, action):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def termination_criteria_met(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def reset(self):
         self.end_of_program = False
