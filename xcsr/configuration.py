@@ -16,6 +16,7 @@ class Configuration:
         self.is_multi_step = False
 
         self.interval_predicate_0 = 0.5
+        self.interval_predicate_1 = 0.1
 
         # the maximum size of the population (in micro-classifiers)
         self.N = 100
