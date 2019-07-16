@@ -77,13 +77,13 @@ class Classifier:
 				return False
 		return True
 
-	def does_subsume(self, cl_tos):
+	def does_subsume(self, other):
 		# if cl_sub and cl_tos have the same action
-		if self.action == cl_tos.action:
+		if self.action == other.action:
 			# if cl_sub is allowed to subsume another classifier
 			if self.could_subsume():
 				# is cl_sub is more general than cl_tos
-				if self.is_more_general(cl_tos):
+				if self.is_more_general(other):
 					# then cl_sub does subsume cl_tos
 					return True
 
