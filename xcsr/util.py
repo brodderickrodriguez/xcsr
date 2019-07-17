@@ -75,10 +75,26 @@ def plot_results(experiment_path, interval=50, title=''):
     else:
         data, labels = _get_data_single_step(experiment_path)
 
-    _plot(data, labels, interval, title)
+    _plot(data, labels, interval, title, experiment_path)
 
 
-def _plot(data, labels, interval, title):
+def _best_fit_line(x, y):
+    x_bar = sum(x) / len(x)
+    y_bar = sum(y) / len(y)
+    n = len(x)
+
+    numerator = sum([xi * yi for xi, yi in zip(x, y)]) - n * x_bar * y_bar
+    denominator = sum([xi ** 2 for xi in x]) - n * x_bar ** 2
+
+    b = numerator / denominator
+    a = y_bar - b * x_bar
+    y_fit = [a + b * xi for xi in x]
+
+    lbl = 'y = {:.2f} + {:.10f}x'.format(a, b)
+    plt.plot(x, y_fit, label=lbl)
+
+
+def _plot(data, labels, interval, title, experiment_path):
     data_plots = [[] for _ in range(len(data) + 1)]
 
     for xi in range(interval, len(data[0]), interval):
@@ -91,7 +107,13 @@ def _plot(data, labels, interval, title):
     for j in range(len(data_plots) - 1):
         plt.plot(data_plots[0], data_plots[j + 1], label=labels[j])
 
+    _best_fit_line(data_plots[0], data_plots[1])
+    _best_fit_line(data_plots[0], data_plots[2])
+
     plt.xlabel('episodes (thousands)')
     plt.title(title)
     plt.gca().legend()
+    # plt.savefig(experiment_path + '/results.png')
     plt.show()
+
+
