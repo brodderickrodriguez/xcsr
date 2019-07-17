@@ -21,10 +21,30 @@ class RMUXEnvironment(Environment):
         return self.state
 
     def step(self, action):
-        self.state = [int(round(np.random.uniform())) for _ in range(self.state_length)]
+        self.state = [round(np.random.uniform() * 1000 / 1000, 3) for _ in range(self.state_length)]
 
     def reset(self):
         self.step(None)
 
     def print_world(self):
         print(self.state)
+
+    def human_play(self, reinforcement_program):
+        print('rmux env')
+
+        while True:  # not reinforcement_program.termination_criteria_met():
+            self.print_world()
+
+            state = self.get_state()
+
+            try:
+                action = int(input('input action: '))
+            except ValueError:
+                print('invalid action')
+                continue
+
+            self.step(action)
+
+            print('reward:\t', reinforcement_program.determine_rho(state, action))
+            print('eop?:\t', reinforcement_program.end_of_program)
+            print()
