@@ -54,6 +54,9 @@ class Classifier:
 	def __repr__(self):
 		return self.__str__()
 
+	def __lt__(self, other):
+		return self.predicted_payoff < other.predicted_payoff
+
 	def copy(self):
 		other = Classifier(self.config, self.state_length)
 		other.__dict__ = self.__dict__
