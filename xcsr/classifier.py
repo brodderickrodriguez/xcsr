@@ -37,7 +37,7 @@ class Classifier:
 		self.last_time_step = 0
 
 		# (as) average size of the action_set this classifier belongs to
-		self.action_set_size = 0
+		self.action_set_size = 1
 
 		# number of micro-classifiers this classifier represents
 		self.numerosity = 1
@@ -109,19 +109,3 @@ class Classifier:
 
 		# otherwise, this classifier cannot subsume another
 		return False
-
-	def deletion_vote(self, avg_fitness_in_population):
-		# compute the vote-value for this classifier
-		vote = self.action_set_size * self.numerosity
-
-		# compute the weighted fitness of this classifier accounting for the classifier's numerosity
-		fitness_per_numerosity = self.fitness / self.numerosity
-
-		# if this classifier's experience > the deletion threshold and fitness_per_numerosity < the fraction
-		# of the mean fitness in population * the average fitness
-		if self.experience > self.config.theta_del and \
-			fitness_per_numerosity < (self.config.delta * avg_fitness_in_population):
-			# set the vote to vote * average fitness / fitness_per_numerosity
-			vote = (vote * avg_fitness_in_population) / fitness_per_numerosity
-
-		return vote
