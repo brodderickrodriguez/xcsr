@@ -1,12 +1,13 @@
 # Brodderick Rodriguez
 # Auburn University - CSSE
-# July 12 2019
+# july 12 2019
 
 import logging
-from xcsr.configuration import Configuration
 
 
 class ReinforcementProgram:
+    DEFAULT_MAX_STEPS = 10 ** 4
+
     def __init__(self, configuration=None):
         logging.info('ReinforcementProgram initialized')
 
@@ -16,7 +17,7 @@ class ReinforcementProgram:
         try:
             self.max_steps = configuration.steps_per_episode
         except AttributeError:
-            self.max_steps = Configuration().steps_per_episode
+            self.max_steps = ReinforcementProgram.DEFAULT_MAX_STEPS
 
     def step(self):
         self.time_step += 1

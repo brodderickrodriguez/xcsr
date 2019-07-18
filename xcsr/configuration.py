@@ -1,6 +1,6 @@
 # Brodderick Rodriguez
 # Auburn University - CSSE
-# July 12 2019
+# july 12 2019
 
 import numpy as np
 
@@ -14,12 +14,6 @@ class Configuration:
         self.steps_per_episode = 1
 
         self.is_multi_step = False
-
-        self.interval_predicate_0 = 0.5
-        self.interval_predicate_1 = 0.1
-        self.theta_interval_predicate = 0.1
-
-        self.do_action_set_combination = False
 
         # the maximum size of the population (in micro-classifiers)
         self.N = 100

@@ -1,6 +1,6 @@
 # Brodderick Rodriguez
 # Auburn University - CSSE
-# July 12 2019
+# july 12 2019
 
 import logging
 

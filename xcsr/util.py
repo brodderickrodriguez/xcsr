@@ -1,6 +1,6 @@
 # Brodderick Rodriguez
 # Auburn University - CSSE
-# July 12 2019
+# july 12 2019
 
 import os
 import numpy as np
@@ -79,18 +79,14 @@ def plot_results(experiment_path, interval=50, title=''):
 
 
 def _best_fit_line(x, y):
-    x_bar = sum(x) / len(x)
-    y_bar = sum(y) / len(y)
-    n = len(x)
+    x_bar, y_bar = np.mean(x), np.mean(y)
+    mn = sum([(xi - x_bar) * (yi - y_bar) for xi, yi in zip(x, y)])
+    md = sum([(xi - x_bar) ** 2 for xi in x])
+    m = mn / md
+    b = y_bar - m * x_bar
 
-    numerator = sum([xi * yi for xi, yi in zip(x, y)]) - n * x_bar * y_bar
-    denominator = sum([xi ** 2 for xi in x]) - n * x_bar ** 2
-
-    b = numerator / denominator
-    a = y_bar - b * x_bar
-    y_fit = [a + b * xi for xi in x]
-
-    lbl = 'y = {:.2f} + {:.10f}x'.format(a, b)
+    y_fit = [b + xi * m for xi in x]
+    lbl = 'y = {:.2f} + {:.10f}x'.format(b, m)
     plt.plot(x, y_fit, label=lbl)
 
 
@@ -113,7 +109,5 @@ def _plot(data, labels, interval, title, experiment_path):
     plt.xlabel('episodes (thousands)')
     plt.title(title)
     plt.gca().legend()
-    # plt.savefig(experiment_path + '/results.png')
+    plt.savefig(experiment_path + '/results.png')
     plt.show()
-
-

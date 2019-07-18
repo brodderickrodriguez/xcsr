@@ -1,6 +1,6 @@
 # Brodderick Rodriguez
 # Auburn University - CSSE
-# July 12 2019
+# july 12 2019
 
 from xcsr.classifier import Classifier
 
@@ -167,8 +167,14 @@ class XCSR:
 
         # for each attribute in cl's condition
         for i in range(self.env.state_length):
-            # set the condition to match sigma
-            cl.condition[i] = sigma[i]
+            # if a random number is less than the probability of assigning
+            # a wildcard '#'
+            if np.random.uniform() < self.config.p_sharp:
+                # assign it to a wildcard '#'
+                cl.condition[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
+            else:
+                # otherwise, match the condition attribute in sigma
+                cl.condition[i] = sigma[i]
 
         # assign a random action to this classifier that is not
         # found in the match_set
@@ -273,85 +279,40 @@ class XCSR:
 
         return _action_set
 
-    # def update_set(self, _action_set, payoff):
-    #     # * equations found on page 12 of 'An Algorithmic Description of XCS' *
-    #     # for each classifier in A
-    #     # (either self.action_set or self.previous_action_set)
-    #     for cl in _action_set:
-    #         # update experience
-    #         cl.experience += 1
-    #
-    #         # if classifier experience is less than inverse of learning rate
-    #         # used to determine update methods for predicted_payoff (p),
-    #         # error (epsilon), and action_set_size (as)
-    #         cl_exp_under_threshold = cl.experience < (1 / self.config.beta)
-    #
-    #         # the difference between the p-ty any predicted payoff
-    #         # used to update payoff and error
-    #         payoff_difference = payoff - cl.predicted_payoff
-    #
-    #         # the sum of the differences between each classifier's
-    #         # numerosity and the action set size
-    #         # used to update action set size
-    #         summed_difference = np.sum([c.numerosity - cl.action_set_size for c in _action_set])
-    #
-    #         # update predicted_payoff (p)
-    #         if cl_exp_under_threshold:
-    #             cl.predicted_payoff += payoff_difference / cl.experience
-    #         else:
-    #             cl.predicted_payoff += self.config.beta * payoff_difference
-    #
-    #         # update prediction error (epsilon)
-    #         if cl_exp_under_threshold:
-    #             cl.epsilon += (np.abs(payoff_difference) - cl.epsilon) / cl.experience
-    #         else:
-    #             cl.epsilon += self.config.beta * (np.abs(payoff_difference) - cl.epsilon)
-    #
-    #         # update action_set_size (as)
-    #         if cl_exp_under_threshold:
-    #             try:
-    #                 cl.action_set_size += summed_difference / cl.experience
-    #             except OverflowError:
-    #                 print('xcsr update as overflow', summed_difference, cl.experience)
-    #         else:
-    #             try:
-    #                 cl.action_set_size += self.config.beta * summed_difference
-    #             except OverflowError:
-    #                 print('xcsr update as2 overflow', self.config.beta, summed_difference, type(summed_difference))
-    #
-    #     # update fitness for each classifier in A
-    #     self.update_fitness(_action_set)
-    #
-    #     # if the program is using action_set_subsumption then
-    #     # call the procedure
-    #     if self.config.do_action_set_subsumption:
-    #         self.do_action_set_subsumption_procedure(_action_set)
-
     def update_set(self, _action_set, payoff):
+        # for each classifier in _action_set
         for cl in _action_set:
+            # update experience
             cl.experience += 1
 
-            # if classifier experience is less than inverse of learning rate
-            # used to determine update methods for predicted_payoff (p),
-            # error (epsilon), and action_set_size (as)
-            cl_exp_under_threshold = cl.experience < 1 / self.config.beta
+            experience_under_threshold = cl.experience < (1 / self.config.beta)
 
-            if cl_exp_under_threshold:
+            # update predicted_payoff
+            if experience_under_threshold:
                 cl.predicted_payoff += (payoff - cl.predicted_payoff) / cl.experience
             else:
                 cl.predicted_payoff += self.config.beta * (payoff - cl.predicted_payoff)
 
-            if cl_exp_under_threshold:
+            # update error (epsilon)
+            if experience_under_threshold:
                 cl.epsilon += (np.abs(payoff - cl.predicted_payoff) - cl.epsilon) / cl.experience
             else:
                 cl.epsilon += self.config.beta * (np.abs(payoff - cl.predicted_payoff) - cl.epsilon)
 
-            if cl_exp_under_threshold:
-                cl.action_set_size += sum([c.numerosity - cl.action_set_size for c in _action_set]) / cl.experience
-            else:
-                cl.action_set_size += self.config.beta * sum([c.numerosity - cl.action_set_size for c in _action_set])
+            summed_difference = sum([c.numerosity - cl.action_set_size for c in _action_set])
 
+            # update action_set_size
+            if experience_under_threshold:
+                cl.action_set_size += summed_difference / cl.experience
+            else:
+                cl.action_set_size += self.config.beta * summed_difference
+
+        # update fitness for each classifier in A
         self.update_fitness(_action_set)
+
+        # if the program is using action_set_subsumption then call the procedure
+        # if self.config.do_action_set_subsumption:
+        #     self.do_action_set_subsumption_procedure(_action_set)
 
     def update_fitness(self, _action_set):
         # set a local variable to track the accuracy over the entire set_
@@ -364,13 +325,12 @@ class XCSR:
         for cl in _action_set:
             # if classifier error is less than the error threshold
             if cl.epsilon < self.config.epsilon_0:
-                # set the accuracy to 1 (100%)
+                # set the accuracy to 100%
                 k[cl] = 1
             else:
-                k[cl] = np.power((cl.epsilon / self.config.epsilon_0), -self.config.v) * self.config.alpha
+                k[cl] = ((cl.epsilon / self.config.epsilon_0) ** -self.config.v) * self.config.alpha
 
-            # update accuracy_sum using a weighted sum based on
-            # classifier numerosity
+            # update accuracy_sum using a weighted sum based on classifier numerosity
             accuracy_sum += k[cl] * cl.numerosity
 
         # for each classifier in set_
@@ -387,8 +347,7 @@ class XCSR:
         # compute the average time since last GA
         average_time = weighted_time / num_micro_classifiers
 
-        # if the average time since last GA is less than the threshold
-        # then do nothing
+        # if the average time since last GA is less than the threshold then do nothing
         if self.rp.time_step - average_time <= self.config.theta_ga:
             return
 
@@ -415,14 +374,13 @@ class XCSR:
             self.apply_crossover(child1, child2)
 
             # set child1's payoff to the mean of both parents
-            child1.predicted_payoff = np.mean([parent1.predicted_payoff,
-                                               parent2.predicted_payoff])
+            child1.predicted_payoff = np.mean([parent1.predicted_payoff, parent2.predicted_payoff])
 
             # set child1's error (epsilon) to the mean of both parents
             child1.epsilon = np.mean([parent1.epsilon, parent2.epsilon])
 
-            # set child1's fitness to the mean of both parents
-            child1.fitness = np.mean([parent1.fitness, parent2.fitness])
+            # set child1's fitness to 10% of the mean of both parents
+            child1.fitness = np.mean([parent1.fitness, parent2.fitness]) * 0.1
 
             # set child2's payoff to child1's payoff
             child2.predicted_payoff = child1.predicted_payoff
@@ -432,14 +390,6 @@ class XCSR:
 
             # set child2's fitness to child1's fitness
             child2.fitness = child1.fitness
-
-        # set child1's fitness to 10% of it parents value to verify the
-        # classifier's worthiness
-        child1.fitness *= 0.1
-
-        # set child2's fitness to 10% of it parents value to verify the
-        # classifier's worthiness
-        child2.fitness *= 0.1
 
         # for both children
         for child in [child1, child2]:
@@ -460,12 +410,10 @@ class XCSR:
                     # otherwise, add the child to the population of classifiers
                     self.insert_in_population(child)
             else:
-                # if subsumption is false, add the child
-                # to the population of classifiers
+                # if subsumption is false, add the child to the population of classifiers
                 self.insert_in_population(child)
 
-            # choose individual classifiers by roulette-wheel
-            # selection for deletion
+            # choose individual classifiers by roulette-wheel selection for deletion
             self.delete_from_population()
 
     @staticmethod
@@ -521,7 +469,13 @@ class XCSR:
             # if some random number is less than
             # the probability of mutating an allele in the offspring
             if np.random.uniform() < self.config.mu:
-                child.condition[i] = sigma[i]
+                # if the attribute at index i is already the wildcard
+                if child.condition[i] == Classifier.WILDCARD_ATTRIBUTE_VALUE:
+                    # swap it with the i-th attribute in sigma
+                    child.condition[i] = sigma[i]
+                else:
+                    # otherwise, swap it to the wildcard
+                    child.condition[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
 
         # if some random number is less than
         # the probability of mutating an allele in the offspring
@@ -535,70 +489,22 @@ class XCSR:
             # assign the action of this child to that random action
             child.action = other_possible_actions[rand_idx]
 
-    def do_action_set_subsumption_procedure(self, set_):
-        # initialize an empty classifier
-        cl = None
-
-        # create a local variable to represent the number of
-        # wildcards that appear in the classifier cl's condition
-        cl_wildcard_count = 0
-
-        # for each classifier in the set_
-        for c in set_:
-            # if c is able to subsume other classifiers
-            if c.could_subsume():
-                # if cl is empty or the number of wildcards in c is greater
-                # than the number of wildcards in cl or the number of
-                # wildcards in c equals the number of wildcards in cl and
-                # some random value is less than 0.5
-                if cl is None or c.count_wildcards() > cl_wildcard_count or \
-                        (cl_wildcard_count == c.count_wildcards() and np.random.uniform() < 0.5):
-                    # then set cl to c
-                    cl = c
-
-                    # update the cl_wildcard_count to equal the wildcard count in c
-                    cl_wildcard_count = c.count_wildcards()
-
-        # if cl is not empty
-        if cl is not None:
-            # for each classifier in the set_
-            for c in set_:
-                # if cl is more general than c, then subsume it
-                if cl.is_more_general(c):
-                    # increment cl's numerosity
-                    cl.numerosity += c.numerosity
-
-                    # remove c from the set_
-                    set_.remove(c)
-
-                    # if c is in the population
-                    if c in self.population:
-                        # then remove it from the population
-                        self.population.remove(c)
-
     def delete_from_population(self):
-        # get the total number of micro-classifiers
-        # currently present in the population
+        # get the total number of micro-classifiers currently present in the population
         num_micro_classifiers = sum([cl.numerosity for cl in self.population])
 
-        # if the number of classifiers is less than the max allowed then do nothing
+        # if the number of classifiers is less than the max allowed the do nothing
         if num_micro_classifiers <= self.config.N:
             return
 
         # the the total population for all the classifiers currently present in the population
         sum_population_fitness = sum([cl.fitness for cl in self.population])
 
-        # compute the average fitness over all the classifiers
-        # currently present in the population
+        # compute the average fitness over all the classifiers currently present in the population
         avg_fitness_in_population = sum_population_fitness / num_micro_classifiers
 
-        # set a local variable to track the deletion vote of all the classifiers
-        vote_sum = 0
-
-        # for each classifier currently in the population
-        for cl in self.population:
-            # sum the deletion vote of all the classifiers
-            vote_sum += cl.deletion_vote(avg_fitness_in_population)
+        # sum the deletion vote among the entire population
+        vote_sum = sum([cl.deletion_vote(avg_fitness_in_population) for cl in self.population])
 
         # select a random threshold for vote_sum
         choice_point = np.random.uniform() * vote_sum
@@ -613,9 +519,8 @@ class XCSR:
 
             # if the current vote_sum is larger than our random threshold
             if vote_sum > choice_point:
-                # if the numerosity of this classifier is > 1
+                # if the numerosity of this classifier is > 1, decrement its numerosity
                 if cl.numerosity > 1:
-                    # decrement its numerosity
                     cl.numerosity -= 1
                 else:
                     # otherwise, if its 1, remove it from the population
@@ -626,12 +531,54 @@ class XCSR:
     def insert_in_population(self, classifier):
         # for each classifier currently in the population
         for cl in self.population:
-            # if the other classifier is equal to the parameter classifier in both condition and action
-            if cl.condition == classifier.condition and cl.action == classifier.action:
+            # if the other classifier is equal to the parameter
+            # classifier in both condition and action
+            if cl.condition == classifier.condition and \
+                    cl.action == classifier.action:
                 # then increment the other classifier's numerosity
                 cl.numerosity += 1
 
+                # and exit, i.e. dont add the parameter classifier
+                # to the population
                 return
 
         # if this classifier is unique then add it to the population
         self.population.append(classifier)
+
+    #
+    # def do_action_set_subsumption_procedure(self, _action_set):
+    #     # initialize an empty classifier
+    #     cl = None
+    #
+    #     # create a local variable to represent the number of
+    #     # wildcards that appear in the classifier cl's condition
+    #     cl_wildcard_count = 0
+    #
+    #     # for each classifier in the set_
+    #     for c in _action_set:
+    #         # if c is able to subsume other classifiers
+    #         if c.could_subsume():
+    #             # if cl is empty or the number of wildcards in c is greater
+    #             # than the number of wildcards in cl or the number of
+    #             # wildcards in c equals the number of wildcards in cl and
+    #             # some random value is less than 0.5
+    #             if cl is None or c.count_wildcards() > cl_wildcard_count or \
+    #                     (cl_wildcard_count == c.count_wildcards() and np.random.uniform() < 0.5):
+    #                 # then set cl to c
+    #                 cl = c
+    #
+    #                 # update the cl_wildcard_count to equal the wildcard count in c
+    #                 cl_wildcard_count = c.count_wildcards()
+    #
+    #     # if cl is not empty
+    #     if cl is not None:
+    #         # for each classifier in the set_
+    #         for c in _action_set:
+    #             # if cl is more general than c, then subsume it
+    #             if cl.is_more_general(c):
+    #                 # increment cl's numerosity
+    #                 cl.numerosity += c.numerosity
+    #
+    #                 # remove c from _action_set and the population
+    #                 _action_set.remove(c)
+    #                 self.population.remove(c)

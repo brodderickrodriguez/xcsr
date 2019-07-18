@@ -1,6 +1,6 @@
 # Brodderick Rodriguez
 # Auburn University - CSSE
-# July 12 2019
+# july 12 2019
 
 from xcsr.configuration import Configuration
 
@@ -12,18 +12,12 @@ class RMUXConfiguration(Configuration):
         # the maximum number of
         self.episodes_per_repetition = 1
 
-        self.steps_per_episode = 1 * 10 ** 4
+        self.steps_per_episode = 1.5 * 10 ** 4
 
         self.is_multi_step = False
 
-        self.interval_predicate_0 = 0.5
-        self.interval_predicate_1 = 0.1
-        self.theta_interval_predicate = 0.1
-
-        self.do_action_set_combination = True
-
         # the maximum size of the population (in micro-classifiers)
-        self.N = 700
+        self.N = 400
 
         # learning rate for payoff, epsilon, fitness, and action_set_size
         self.beta = 0.2
@@ -34,7 +28,7 @@ class RMUXConfiguration(Configuration):
         self.v = 5
 
         # discount factor
-        self.gamma = 0.8
+        self.gamma = 0.71
 
         # the GA threshold. GA is applied in a set when the average time
         # since the last GA in the set is greater than theta_ga
@@ -71,7 +65,7 @@ class RMUXConfiguration(Configuration):
 
         # probability during action selection of choosing the
         # action uniform randomly
-        self.p_explr = 0.0001
+        self.p_explr = 0.01
 
         # the minimum number of actions that must be present in match_set
         # or else covering will occur
@@ -81,7 +75,7 @@ class RMUXConfiguration(Configuration):
 
         # boolean parameter. specifies if offspring are to be tested
         # for possible subsumption by parents
-        self.do_ga_subsumption = False
+        self.do_ga_subsumption = True
 
         # boolean parameter. specifies if action sets are to be tested
         # for subsuming classifiers

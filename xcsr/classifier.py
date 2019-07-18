@@ -1,11 +1,10 @@
 # Brodderick Rodriguez
 # Auburn University - CSSE
-# July 12 2019
-
-import numpy as np
+# july 12 2019
 
 
 class Classifier:
+	WILDCARD_ATTRIBUTE_VALUE = '#'
 	CLASSIFIER_ID = 0
 
 	def __init__(self, config, state_length):
@@ -16,18 +15,13 @@ class Classifier:
 
 		self.state_length = state_length
 
-		# condition that specifies the sensory situation
-		# which the classifier applies to
+		# condition that specifies the sensory situation which the classifier applies to
 		self.condition = [0 for _ in range(self.state_length)]
-
-		ip = [np.random.uniform(high=self.config.interval_predicate_0) for _ in range(self.state_length)]
-		self.interval_predicate = ip
 
 		# action the classifier proposes
 		self.action = None
 
-		# (p) estimated payoff expected if the classifier matches and
-		# its action is committed
+		# (p) estimated payoff expected if the classifier matches and its action is committed
 		self.predicted_payoff = self.config.p_1
 
 		# (epsilon) the error made in the predictions
@@ -36,17 +30,14 @@ class Classifier:
 		# (F) the classifiers fitness
 		self.fitness = self.config.F_1
 
-		# (exp) count for the number of times this classifier has
-		# belonged to the action_set
+		# (exp) count for the number of times this classifier has belonged to the action_set
 		self.experience = 0
 
-		# time_step of the last occurrence of a GA in an
-		# action_set to which this classifier belonged
+		# time_step of the last occurrence of a GA in an action_set to which this classifier belonged
 		self.last_time_step = 0
 
-		# (as) average size of the action_set this classifier
-		# belongs to
-		self.action_set_size = 1
+		# (as) average size of the action_set this classifier belongs to
+		self.action_set_size = 0
 
 		# number of micro-classifiers this classifier represents
 		self.numerosity = 1
@@ -69,37 +60,35 @@ class Classifier:
 		return other
 
 	def count_wildcards(self):
-		return 0
+		count = sum([1 if x == Classifier.WILDCARD_ATTRIBUTE_VALUE else 0 for x in self.condition])
+		return count
 
 	def matches_sigma(self, sigma):
-		for ci, ipi, si in zip(self.condition, self.interval_predicate, sigma):
-			if not ci - ipi <= si <= ci + ipi:
+		for ci, si in zip(self.condition, sigma):
+			if ci != Classifier.WILDCARD_ATTRIBUTE_VALUE and ci != si:
 				return False
 		return True
 
 	def does_subsume(self, other):
-		# if cl_sub and cl_tos have the same action
-		if self.action == other.action:
-			# if cl_sub is allowed to subsume another classifier
-			if self.could_subsume():
-				# is cl_sub is more general than cl_tos
-				if self.is_more_general(other):
-					# then cl_sub does subsume cl_tos
-					return True
-
-		# otherwise, cl_sub does not subsume cl_tos
-		return False
+		# if self and other have the same action, if self is allowed to subsume and is self is more general than other
+		return self.action == other.action and self.could_subsume() and self.is_more_general(other)
 
 	def is_more_general(self, other):
+		# count the number of wildcards in cl_gen
+		wildcard_count = self.count_wildcards()
+
+		# count the number of wildcards in cl_spec
+		other_wildcard_count = other.count_wildcards()
+
+		# if cl_gen is not more general than cl_spec
+		if wildcard_count <= other_wildcard_count:
+			return False
+
 		# for each attribute index i in the classifiers condition
 		for i in range(self.state_length):
-			other_min = other.condition[i] - other.interval_predicate[i]
-			other_max = other.condition[i] + other.interval_predicate[i]
-
-			self_min = self.condition[i] - self.interval_predicate[i]
-			self_max = self.condition[i] + self.interval_predicate[i]
-
-			if other_min < self_min or other_max > self_max:
+			# if the condition for cl_gen is not the wildcard nd cl_gen condition[i] does not match cl_spec condition[i]
+			if self.condition[i] != Classifier.WILDCARD_ATTRIBUTE_VALUE and self.condition[i] != other.condition[i]:
+				# then cl_gen is not more general than cl_spec
 				return False
 
 		# otherwise, cl_gen is more general than cl_spec

@@ -1,9 +1,10 @@
 # Brodderick Rodriguez
 # Auburn University - CSSE
-# July 12 2019
+# july 12 2019
 
 import logging
 import sys
+import shutil
 from xcsr.xcsr_driver import XCSRDriver
 from xcsr.xcsr import XCSR
 from xcsr import util
@@ -26,7 +27,7 @@ def rmux():
     driver = XCSRDriver()
     driver.repetitions = 5
     driver.save_location = './xcsr/example_scenarios/rmux/data'
-    driver.experiment_name = 'test16'
+    driver.experiment_name = 'TMP'
 
     driver.xcs_class = XCSR
     driver.environment_class = RMUXEnvironment
@@ -38,13 +39,13 @@ def rmux():
     dir_name = './xcsr/example_scenarios/rmux/data/' + driver.experiment_name
     util.plot_results(dir_name, title='RMUX', interval=50)
 
+    shutil.rmtree('./xcsr/example_scenarios/rmux/data/TMP')
+
 
 if __name__ == '__main__':
-    print('XCS')
+    print('XCSR')
     # logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
     # human_play_rmux()
     rmux()
-
-
 

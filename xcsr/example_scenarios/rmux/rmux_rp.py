@@ -1,17 +1,15 @@
 # Brodderick Rodriguez
 # Auburn University - CSSE
-# July 12 2019
+# july 12 2019
 
 from xcsr.reinforcement_program import ReinforcementProgram
-
 import logging
-import numpy as np
 
 
 class RMUXReinforcementProgram(ReinforcementProgram):
     def __init__(self, configuration=None):
         ReinforcementProgram.__init__(self, configuration)
-        logging.info('RMUX rp initialized')
+        logging.info('RMUX ReinforcementProgram initialized')
 
     def determine_rho(self, sigma, action):
         self.step()
