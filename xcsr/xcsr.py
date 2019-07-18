@@ -418,38 +418,26 @@ class XCSR:
 
     @staticmethod
     def select_offspring(_action_set):
-        # set a local variable to track the fitness over the entire set_
-        fitness_sum = 0
+        # if some random number is less than a threshold then select using a beta distribution the best classifier
+        if np.random.uniform() < 0.5:
+            # select a bias index
+            choice_point = int(np.floor(np.random.beta(1, 5) * len(_action_set)))
 
-        # for each classifier in the set_
-        for cl in _action_set:
-            # add its fitness to the fitness_sum
-            fitness_sum += cl.fitness
+            # sort the _action_set
+            sorted_action_set = sorted(_action_set, reverse=True)
 
-        # select a random threshold for fitness_sum
-        choice_point = np.random.uniform() * fitness_sum
-
-        # reset fitness_sum to zero
-        fitness_sum = 0
-
-        # for each classifier in the set_
-        for cl in _action_set:
-            # add its fitness to the fitness_sum
-            fitness_sum += cl.fitness
-
-            # if we pass the choice_point, return the classifier
-            # which cause us to pass the threshold
-            if fitness_sum > choice_point:
-                return cl
+            # return that classifier
+            return sorted_action_set[choice_point]
+        else:
+            # otherwise, return a random classifier
+            return np.random.choice(_action_set)
 
     @staticmethod
     def apply_crossover(child1, child2):
-        # set a local variable for some random index in which we
-        # terminate the while loop
+        # set a local variable for some random index in which we terminate the while loop
         x = np.random.uniform() * (len(child1.condition) + 1)
 
-        # set a local variable for some random index in which we
-        # terminate the while loop
+        # set a local variable for some random index in which we terminate the while loop
         y = np.random.uniform() * (len(child2.condition) + 1)
 
         # if x is greater than y
@@ -477,8 +465,7 @@ class XCSR:
                     # otherwise, swap it to the wildcard
                     child.condition[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
 
-        # if some random number is less than
-        # the probability of mutating an allele in the offspring
+        # if some random number is less than the probability of mutating an allele in the offspring
         if np.random.uniform() < self.config.mu:
             # then generate a list of all the other possible actions
             other_possible_actions = list(set(self.env.possible_actions) - {child.action})
@@ -497,36 +484,23 @@ class XCSR:
         if num_micro_classifiers <= self.config.N:
             return
 
-        # the the total population for all the classifiers currently present in the population
-        sum_population_fitness = sum([cl.fitness for cl in self.population])
+        # if some random number is less than a threshold then select using a beta distribution the best classifier
+        if np.random.uniform() < 0.5:
+            # select a bias index
+            choice_point = int(np.floor(np.random.beta(1, 5) * len(self.population)))
 
-        # compute the average fitness over all the classifiers currently present in the population
-        avg_fitness_in_population = sum_population_fitness / num_micro_classifiers
+            # sort the _action_set
+            sorted_population = sorted(self.population, reverse=False)
 
-        # sum the deletion vote among the entire population
-        vote_sum = sum([cl.deletion_vote(avg_fitness_in_population) for cl in self.population])
+            cl = sorted_population[choice_point]
 
-        # select a random threshold for vote_sum
-        choice_point = np.random.uniform() * vote_sum
-
-        # reset the vote_sum to zero
-        vote_sum = 0
-
-        # for each classifier currently in the population
-        for cl in self.population:
-            # sum the deletion vote of all the classifiers
-            vote_sum += cl.deletion_vote(avg_fitness_in_population)
-
-            # if the current vote_sum is larger than our random threshold
-            if vote_sum > choice_point:
-                # if the numerosity of this classifier is > 1, decrement its numerosity
-                if cl.numerosity > 1:
-                    cl.numerosity -= 1
-                else:
-                    # otherwise, if its 1, remove it from the population
-                    self.population.remove(cl)
-
-                return
+            if cl.numerosity > 1:
+                cl.numerosity -= 1
+            else:
+                self.population.remove(cl)
+        else:
+            cl = np.random.choice(self.population)
+            self.population.remove(cl)
 
     def insert_in_population(self, classifier):
         # for each classifier currently in the population
