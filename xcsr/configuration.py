@@ -39,16 +39,6 @@ class Configuration:
         # specifies the probability of mutating an allele in the offspring
         self.mu = np.random.uniform(0.01, 0.05)
 
-        # deletion threshold. If the experience of a classifier is greater
-        # than theta_del, its fitness may be considered in its probability
-        # of deletion
-        self.theta_del = 20
-
-        # specifies the fraction of the mean fitness in population below which
-        # the fitness of a classifier may be considered in its probability
-        # of deletion
-        self.delta = 0.1
-
         # subsumption threshold. experience of a classifier must be greater
         # than theta_sub in order to be able to subsume another classifier
         self.theta_sub = 20
@@ -75,7 +65,3 @@ class Configuration:
         # boolean parameter. specifies if offspring are to be tested
         # for possible subsumption by parents
         self.do_ga_subsumption = True
-
-        # boolean parameter. specifies if action sets are to be tested
-        # for subsuming classifiers
-        self.do_action_set_subsumption = False
