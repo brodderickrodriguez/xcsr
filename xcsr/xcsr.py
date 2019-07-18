@@ -167,8 +167,7 @@ class XCSR:
 
         # for each attribute in cl's condition
         for i in range(self.env.state_length):
-            # if a random number is less than the probability of assigning
-            # a wildcard '#'
+            # if a random number is less than the probability of assigning a wildcard '#'
             if np.random.uniform() < self.config.p_sharp:
                 # assign it to a wildcard '#'
                 cl.condition[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
@@ -176,8 +175,7 @@ class XCSR:
                 # otherwise, match the condition attribute in sigma
                 cl.condition[i] = sigma[i]
 
-        # assign a random action to this classifier that is not
-        # found in the match_set
+        # assign a random action to this classifier that is not found in the match_set
         # get all the unique actions found in the match_set
         actions_found = set([cl.action for cl in _match_set])
 
@@ -187,8 +185,7 @@ class XCSR:
         # if there are possible actions that are not in the actions_found
         if len(difference_actions) > 0:
             # find a random index in difference_actions
-            rand_idx = int(np.floor(np.random.uniform() *
-                                    len(difference_actions)))
+            rand_idx = int(np.floor(np.random.uniform() * len(difference_actions)))
 
             # set the action to the action corresponding to the random index
             cl.action = list(difference_actions)[rand_idx]
@@ -201,14 +198,6 @@ class XCSR:
 
         # set the time step to the current time step
         cl.time_step = self.rp.time_step
-
-        # set the numerosity to 1 because this method only gets called when
-        # there are insufficient classifier actions
-        cl.numerosity = 1
-
-        # set the action_set_size to 1 because this method only gets called when
-        # there are insufficient classifier actions
-        cl.action_set_size = 1
 
         return cl
 
@@ -454,8 +443,7 @@ class XCSR:
     def apply_mutation(self, child, sigma):
         # for each index in the child's condition
         for i in range(self.env.state_length):
-            # if some random number is less than
-            # the probability of mutating an allele in the offspring
+            # if some random number is less than the probability of mutating an allele in the offspring
             if np.random.uniform() < self.config.mu:
                 # if the attribute at index i is already the wildcard
                 if child.condition[i] == Classifier.WILDCARD_ATTRIBUTE_VALUE:
