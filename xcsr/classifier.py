@@ -98,14 +98,5 @@ class Classifier:
 		return True
 
 	def could_subsume(self):
-		# if the classifier's experience is greater than
-		# the subsumption threshold
-		if self.experience > self.config.theta_sub:
-			# and if the classifier's error (epsilon) is less than
-			# the error threshold
-			if self.epsilon < self.config.epsilon_0:
-				# return true i.e. this classifier can subsume another
-				return True
-
-		# otherwise, this classifier cannot subsume another
-		return False
+		# if self experience > than subsumption threshold and if self error < than the error threshold
+		return self.experience > self.config.theta_sub and self.epsilon < self.config.epsilon_0
