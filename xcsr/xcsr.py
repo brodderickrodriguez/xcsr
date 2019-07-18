@@ -180,21 +180,15 @@ class XCSR:
         actions_found = set([cl.action for cl in _match_set])
 
         # subtract the possible actions from the actions found
-        difference_actions = set(self.env.possible_actions) - actions_found
+        difference_actions = list(set(self.env.possible_actions) - actions_found)
 
         # if there are possible actions that are not in the actions_found
         if len(difference_actions) > 0:
-            # find a random index in difference_actions
-            rand_idx = int(np.floor(np.random.uniform() * len(difference_actions)))
-
-            # set the action to the action corresponding to the random index
-            cl.action = list(difference_actions)[rand_idx]
+            # find a random action in difference_actions
+            cl.action = np.random.choice(difference_actions)
         else:
-            # find a random index in the possible actions
-            rand_idx = int(np.floor(np.random.uniform() * len(self.config.possible_actions)))
-
-            # set the action to the action corresponding to the random index
-            cl.action = self.config.possible_actions[rand_idx]
+            # find a random action in self.config.possible_actions
+            cl.action = np.random.choice(self.config.possible_actions)
 
         # set the time step to the current time step
         cl.time_step = self.rp.time_step
@@ -208,11 +202,7 @@ class XCSR:
         # initialize the fitness sum dictionary
         fsa = {a: 0.0 for a in self.env.possible_actions}
 
-        # for each classifier in match_set
-        for i in range(len(self.match_set)):
-            # set a local variable
-            cl = self.match_set[i]
-
+        for cl in self.match_set:
             # if the value in prediction dictionary for cl.action is None
             if pa[cl.action] is None:
                 # set it by accounting for fitness and predicted_payoff
@@ -228,8 +218,7 @@ class XCSR:
         for action in pa.keys():
             # if the fitness sum of the action is not zero
             if fsa[action] != 0:
-                # divide by the sum of the fitness for action across
-                # all classifiers
+                # divide by the sum of the fitness for action across all classifiers
                 pa[action] /= fsa[action]
 
         return pa
@@ -256,17 +245,8 @@ class XCSR:
             return best_action[0]
 
     def generate_action_set(self, action):
-        # initialize _action_set to an empty list
-        _action_set = []
-
-        # for each classifier in the match_set
-        for cl in self.match_set:
-            # if the classifier suggests the chosen action
-            if cl.action == action:
-                # add it to the action_set
-                _action_set.append(cl)
-
-        return _action_set
+        # find all the classifiers in the match set which propose this action and return them
+        return [cl for cl in self.match_set if cl.action == action]
 
     def update_set(self, _action_set, payoff):
         # for each classifier in _action_set
@@ -296,12 +276,8 @@ class XCSR:
             else:
                 cl.action_set_size += self.config.beta * summed_difference
 
-        # update fitness for each classifier in A
+        # update fitness for each classifier in _action_set
         self.update_fitness(_action_set)
-
-        # if the program is using action_set_subsumption then call the procedure
-        # if self.config.do_action_set_subsumption:
-        #     self.do_action_set_subsumption_procedure(_action_set)
 
     def update_fitness(self, _action_set):
         # set a local variable to track the accuracy over the entire set_
@@ -423,22 +399,13 @@ class XCSR:
 
     @staticmethod
     def apply_crossover(child1, child2):
-        # set a local variable for some random index in which we terminate the while loop
-        x = np.random.uniform() * (len(child1.condition) + 1)
+        # find two values in [0, len(condition)) s.t. x <= y
+        x = np.random.choice(range(len(child1.condition)))
+        y = np.random.choice(range(x, len(child1.condition)))
 
-        # set a local variable for some random index in which we terminate the while loop
-        y = np.random.uniform() * (len(child2.condition) + 1)
-
-        # if x is greater than y
-        if x > y:
-            # then swap their values
-            x, y = y, x
-
-        for i in range(int(y)):
-            # while we are within the random bounds specified by x and y
-            if x <= i < y:
-                # swap the i-th condition in child1's and child2's condition
-                child1.condition[i], child2.condition[i] = child2.condition[i], child1.condition[i]
+        # swap the i-th condition in child1's and child2's condition
+        for i in range(int(x), int(y)):
+            child1.condition[i], child2.condition[i] = child2.condition[i], child1.condition[i]
 
     def apply_mutation(self, child, sigma):
         # for each index in the child's condition
@@ -458,18 +425,12 @@ class XCSR:
             # then generate a list of all the other possible actions
             other_possible_actions = list(set(self.env.possible_actions) - {child.action})
 
-            # find some random index in that list
-            rand_idx = int(np.floor(np.random.uniform() * len(other_possible_actions)))
-
             # assign the action of this child to that random action
-            child.action = other_possible_actions[rand_idx]
+            child.action = np.random.choice(other_possible_actions)
 
     def delete_from_population(self):
-        # get the total number of micro-classifiers currently present in the population
-        num_micro_classifiers = sum([cl.numerosity for cl in self.population])
-
         # if the number of classifiers is less than the max allowed the do nothing
-        if num_micro_classifiers <= self.config.N:
+        if self.config.N > sum([cl.numerosity for cl in self.population]):
             return
 
         # if some random number is less than a threshold then select using a beta distribution the best classifier
@@ -480,67 +441,27 @@ class XCSR:
             # sort the _action_set
             sorted_population = sorted(self.population, reverse=False)
 
+            # grab the classifier corresponding to the choice point
             cl = sorted_population[choice_point]
 
+            # if the classifier's numerosity is greater than 1 then decrement it, otherwise remove it
             if cl.numerosity > 1:
                 cl.numerosity -= 1
             else:
                 self.population.remove(cl)
         else:
+            # otherwise choose a random classifier to delete
             cl = np.random.choice(self.population)
             self.population.remove(cl)
 
-    def insert_in_population(self, classifier):
+    def insert_in_population(self, other):
         # for each classifier currently in the population
         for cl in self.population:
-            # if the other classifier is equal to the parameter
-            # classifier in both condition and action
-            if cl.condition == classifier.condition and \
-                    cl.action == classifier.action:
+            # if the other classifier is equal to the parameter classifier in both condition and action
+            if cl.condition == other.condition and cl.action == other.action:
                 # then increment the other classifier's numerosity
                 cl.numerosity += 1
-
-                # and exit, i.e. dont add the parameter classifier
-                # to the population
                 return
 
         # if this classifier is unique then add it to the population
-        self.population.append(classifier)
-
-    #
-    # def do_action_set_subsumption_procedure(self, _action_set):
-    #     # initialize an empty classifier
-    #     cl = None
-    #
-    #     # create a local variable to represent the number of
-    #     # wildcards that appear in the classifier cl's condition
-    #     cl_wildcard_count = 0
-    #
-    #     # for each classifier in the set_
-    #     for c in _action_set:
-    #         # if c is able to subsume other classifiers
-    #         if c.could_subsume():
-    #             # if cl is empty or the number of wildcards in c is greater
-    #             # than the number of wildcards in cl or the number of
-    #             # wildcards in c equals the number of wildcards in cl and
-    #             # some random value is less than 0.5
-    #             if cl is None or c.count_wildcards() > cl_wildcard_count or \
-    #                     (cl_wildcard_count == c.count_wildcards() and np.random.uniform() < 0.5):
-    #                 # then set cl to c
-    #                 cl = c
-    #
-    #                 # update the cl_wildcard_count to equal the wildcard count in c
-    #                 cl_wildcard_count = c.count_wildcards()
-    #
-    #     # if cl is not empty
-    #     if cl is not None:
-    #         # for each classifier in the set_
-    #         for c in _action_set:
-    #             # if cl is more general than c, then subsume it
-    #             if cl.is_more_general(c):
-    #                 # increment cl's numerosity
-    #                 cl.numerosity += c.numerosity
-    #
-    #                 # remove c from _action_set and the population
-    #                 _action_set.remove(c)
-    #                 self.population.remove(c)
+        self.population.append(other)
