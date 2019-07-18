@@ -106,6 +106,9 @@ def _plot(data, labels, interval, title, experiment_path):
     _best_fit_line(data_plots[0], data_plots[1])
     _best_fit_line(data_plots[0], data_plots[2])
 
+    # plt.errorbar(data_plots[0], data_plots[1], yerr=0.1, ecolor='lightgray')
+
+    plt.grid(True)
     plt.xlabel('episodes (thousands)')
     plt.title(title)
     plt.gca().legend()
