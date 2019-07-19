@@ -6,7 +6,6 @@ from xcsr.classifier import Classifier
 
 import time
 import logging
-import operator
 import numpy as np
 
 
@@ -104,8 +103,7 @@ class XCSR:
                 # previous_sigma inserting and possibly deleting in population
                 self.run_ga(self.previous_action_set, previous_sigma)
 
-            # if experiment is over based on information from
-            # reinforcement program
+            # if experiment is over based on information from reinforcement program
             if self.rp.end_of_program:
                 # update action_set
                 self.update_set(_action_set=self.action_set, payoff=rho)
@@ -238,11 +236,13 @@ class XCSR:
             # get all actions that have some predicted value
             options = {key: val for key, val in predictions.items() if val is not None}
 
-            # otherwise, return the best action to take
-            best_action = max(options.items(), key=operator.itemgetter(1))
+            # sort options by action predicted value in non-ascending order
+            sorted_options = sorted(options.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
+
+            best_action = sorted_options[0][0]
 
             # return the action corresponding to the highest weighted payoff
-            return best_action[0]
+            return best_action
 
     def generate_action_set(self, action):
         # find all the classifiers in the match set which propose this action and return them
