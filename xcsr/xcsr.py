@@ -14,12 +14,10 @@ class XCSR:
         # all the classifiers that currently exist
         self.population = []
 
-        # formed from population. all classifiers that their
-        # condition matches the current state
+        # formed from population. all classifiers that their condition matches the current state
         self.match_set = []
 
-        # formed from match_set. all classifiers that propose
-        # the action which was committed
+        # formed from match_set. all classifiers that propose the action which was committed
         self.action_set = []
 
         # the action_set which was active at the previous time_step
@@ -34,8 +32,7 @@ class XCSR:
         # the current configuration for hyper params
         self.config = configuration
 
-        # dictionary containing all the seen rewards, expected rewards,
-        # states, actions, and the number of microclassifiers
+        # dictionary containing all rewards, expected rewards, and the number of microclassifiers
         self.metrics_history = {}
         self.reset_metrics()
 
