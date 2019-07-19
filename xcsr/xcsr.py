@@ -338,23 +338,15 @@ class XCSR:
             # apply crossover to child1 and child2
             self.apply_crossover(child1, child2)
 
-            # set child1's payoff to the mean of both parents
-            child1.predicted_payoff = np.mean([parent1.predicted_payoff, parent2.predicted_payoff])
+            # set child1 and child2 payoff to the mean of both parents
+            child1.predicted_payoff = child2.predicted_payoff = \
+                np.mean([parent1.predicted_payoff, parent2.predicted_payoff])
 
-            # set child1's error (epsilon) to the mean of both parents
-            child1.epsilon = np.mean([parent1.epsilon, parent2.epsilon])
+            # set child1 and child2 error (epsilon) to the mean of both parents
+            child1.epsilon = child2.epsilon = np.mean([parent1.epsilon, parent2.epsilon])
 
-            # set child1's fitness to 10% of the mean of both parents
-            child1.fitness = np.mean([parent1.fitness, parent2.fitness]) * 0.1
-
-            # set child2's payoff to child1's payoff
-            child2.predicted_payoff = child1.predicted_payoff
-
-            # set child2's epsilon (error) to child1's epsilon (error)
-            child2.epsilon = child1.epsilon
-
-            # set child2's fitness to child1's fitness
-            child2.fitness = child1.fitness
+            # set child1 and child2 fitness to 10% of the mean of both parents
+            child1.fitness = child2.fitness = np.mean([parent1.fitness, parent2.fitness]) * 0.1
 
         # for both children
         for child in [child1, child2]:
