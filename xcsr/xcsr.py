@@ -96,8 +96,7 @@ class XCSR:
                 # update previous_action_set
                 self.update_set(_action_set=self.previous_action_set, payoff=payoff)
 
-                # run genetic algorithm on previous_action_set and
-                # previous_sigma inserting and possibly deleting in population
+                # run gam on previous_action_set and previous_sigma inserting and possibly deleting in population
                 self.run_ga(self.previous_action_set, previous_sigma)
 
             # if experiment is over based on information from reinforcement program
@@ -105,8 +104,7 @@ class XCSR:
                 # update action_set
                 self.update_set(_action_set=self.action_set, payoff=rho)
 
-                # run genetic algorithm on previous_action_set and
-                # previous_sigma inserting and possibly deleting in population
+                # run ga on previous_action_set and previous_sigma inserting and possibly deleting in population
                 self.run_ga(self.action_set, sigma)
 
                 # empty previous_action_set
@@ -137,18 +135,15 @@ class XCSR:
             # collect all the unique actions found in the local match set
             all_found_actions = set([cl.action for cl in _match_set])
 
-            # if the length of all unique actions is less than our
-            # threshold, theta_mna, begin covering procedure
+            # if the length of all unique actions is less than our threshold, theta_mna, begin covering procedure
             if len(all_found_actions) < self.config.theta_mna:
-                # create a new classifier, cl_c
-                # using the local match set and the current situation (sigma)
+                # create a new classifier, cl_c using the local match set and the current situation (sigma)
                 cl_c = self.generate_covering_classifier(_match_set, sigma)
 
                 # add the new classifier cl_c to the population
                 self.population.append(cl_c)
 
-                # choose individual classifiers by roulette-wheel
-                # selection for deletion
+                # choose individual for deletion by beta-distributed epsilon-greedy selection
                 self.delete_from_population()
 
                 # empty local match set M
@@ -170,7 +165,6 @@ class XCSR:
                 # otherwise, match the condition attribute in sigma
                 cl.condition[i] = sigma[i]
 
-        # assign a random action to this classifier that is not found in the match_set
         # get all the unique actions found in the match_set
         actions_found = set([cl.action for cl in _match_set])
 
@@ -367,7 +361,7 @@ class XCSR:
                 # if subsumption is false, add the child to the population of classifiers
                 self.insert_in_population(child)
 
-            # choose individual classifiers by roulette-wheel selection for deletion
+            # choose individual for deletion by beta-distributed epsilon-greedy selection
             self.delete_from_population()
 
     @staticmethod
