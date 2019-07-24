@@ -62,6 +62,17 @@ class Classifier:
 		other.__dict__ = self.__dict__
 		return other
 
+	def set_predicates(self, sigma):
+		# for each attribute in cl's condition
+		for i in range(self.state_length):
+			# if a random number is less than the probability of assigning a wildcard '#'
+			if np.random.uniform() < self.config.p_sharp:
+				# assign it to a wildcard '#'
+				self.condition[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
+			else:
+				# otherwise, match the condition attribute in sigma
+				self..condition[i] = sigma[i]
+
 	def count_wildcards(self):
 		count = sum([1 if x == Classifier.WILDCARD_ATTRIBUTE_VALUE else 0 for x in self.condition])
 		return count
@@ -75,6 +86,9 @@ class Classifier:
 	def does_subsume(self, other):
 		# if self and other have the same action, if self is allowed to subsume and is self is more general than other
 		return self.action == other.action and self.could_subsume() and self.is_more_general(other)
+
+	def predicate_is_more_general(self, other):
+		pass
 
 	def is_more_general(self, other):
 		# count the number of wildcards in cl_gen
