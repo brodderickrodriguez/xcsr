@@ -16,8 +16,10 @@ class RMUXConfiguration(Configuration):
 
         self.is_multi_step = False
 
+        self.predicate_delta = 0.5
+
         # the maximum size of the population (in micro-classifiers)
-        self.N = 400
+        self.N = 1200
 
         # learning rate for payoff, epsilon, fitness, and action_set_size
         self.beta = 0.2
@@ -57,10 +59,8 @@ class RMUXConfiguration(Configuration):
         # action uniform randomly
         self.p_explr = 0.01
 
-        # the minimum number of actions that must be present in match_set
-        # or else covering will occur
-        # "to cause covering to provide classifiers for every action, set
-        # equal to number of available actions"
+        # the minimum number of actions that must be present in match_set or else covering will occur
+        # "to cause covering to provide classifiers for every action, set equal to number of available actions"
         self.theta_mna = 2
 
         # boolean parameter. specifies if offspring are to be tested
