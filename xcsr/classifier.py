@@ -2,6 +2,8 @@
 # Auburn University - CSSE
 # july 12 2019
 
+import numpy as np
+
 
 class Classifier:
 	WILDCARD_ATTRIBUTE_VALUE = '#'
@@ -71,7 +73,7 @@ class Classifier:
 				self.condition[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
 			else:
 				# otherwise, match the condition attribute in sigma
-				self..condition[i] = sigma[i]
+				self.condition[i] = sigma[i]
 
 	def count_wildcards(self):
 		count = sum([1 if x == Classifier.WILDCARD_ATTRIBUTE_VALUE else 0 for x in self.condition])
