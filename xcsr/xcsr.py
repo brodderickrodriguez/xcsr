@@ -14,7 +14,7 @@ class XCSR:
         # all the classifiers that currently exist
         self.population = []
 
-        # formed from population. all classifiers that their condition matches the current state
+        # formed from population. all classifiers that their predicate matches the current state
         self.match_set = []
 
         # formed from match_set. all classifiers that propose the action which was committed
@@ -151,7 +151,7 @@ class XCSR:
         # initialize new classifier
         cl = Classifier(config=self.config, state_length=self.env.state_length)
 
-        # set the covering classifier's condition and interval
+        # set the covering classifier's predicate
         cl.set_predicates(sigma)
 
         # get all the unique actions found in the match_set
@@ -369,26 +369,26 @@ class XCSR:
 
     @staticmethod
     def apply_crossover(child1, child2):
-        # find two values in [0, len(condition)) s.t. x <= y
-        x = np.random.choice(range(len(child1.condition)))
-        y = np.random.choice(range(x, len(child1.condition)))
+        # find two values in [0, len(predicate)) s.t. x <= y
+        x = np.random.choice(range(len(child1.predicate)))
+        y = np.random.choice(range(x, len(child1.predicate)))
 
-        # swap the i-th condition in child1's and child2's condition
+        # swap the i-th predicate in child1's and child2's predicate
         for i in range(int(x), int(y)):
-            child1.condition[i], child2.condition[i] = child2.condition[i], child1.condition[i]
+            child1.predicate[i], child2.predicate[i] = child2.predicate[i], child1.predicate[i]
 
     def apply_mutation(self, child, sigma):
-        # for each index in the child's condition
+        # for each index in the child's predicate
         for i in range(self.env.state_length):
             # if some random number is less than the probability of mutating an allele in the offspring
             if np.random.uniform() < self.config.mu:
                 # if the attribute at index i is already the wildcard
-                if child.condition[i] == Classifier.WILDCARD_ATTRIBUTE_VALUE:
+                if child.predicate[i] == Classifier.WILDCARD_ATTRIBUTE_VALUE:
                     # swap it with the i-th attribute in sigma
-                    child.condition[i] = sigma[i]
+                    child.predicate[i] = sigma[i]
                 else:
                     # otherwise, swap it to the wildcard
-                    child.condition[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
+                    child.predicate[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
 
         # if some random number is less than the probability of mutating an allele in the offspring
         if np.random.uniform() < self.config.mu:
@@ -427,8 +427,8 @@ class XCSR:
     def insert_in_population(self, other):
         # for each classifier currently in the population
         for cl in self.population:
-            # if the other classifier is equal to the parameter classifier in both condition and action
-            if cl.condition == other.condition and cl.action == other.action:
+            # if the other classifier is equal to the parameter classifier in both predicate and action
+            if cl.predicate == other.predicate and cl.action == other.action:
                 # then increment the other classifier's numerosity
                 cl.numerosity += 1
                 return
