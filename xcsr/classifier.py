@@ -18,7 +18,7 @@ class Classifier:
 		self.state_length = state_length
 
 		# condition that specifies the sensory situation which the classifier applies to
-		self.condition = [0 for _ in range(self.state_length)]
+		self.predicate = [0 for _ in range(self.state_length)]
 
 		# action the classifier proposes
 		self.action = None
@@ -45,10 +45,10 @@ class Classifier:
 		self.numerosity = 1
 
 	def __str__(self):
-		s = '\nid: {id}\n\tcondition: {cond}, action: {act}\n\tpred:\t{pred} \
+		s = '\nid: {id}\n\tpredicate: {cond}, action: {act}\n\tpred:\t{pred} \
 				\n\terror:\t{err}\n\tfit:\t{fit} \
 				\n\tnum:\t{num}\n\texp:\t{exp}\n\t'.format(
-					id=self.id, cond=self.condition, act=self.action,
+					id=self.id, cond=self.predicate, act=self.action,
 					pred=self.predicted_payoff, err=self.epsilon,
 					fit=self.fitness, num=self.numerosity, exp=self.experience)
 		return s
@@ -70,17 +70,17 @@ class Classifier:
 			# if a random number is less than the probability of assigning a wildcard '#'
 			if np.random.uniform() < self.config.p_sharp:
 				# assign it to a wildcard '#'
-				self.condition[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
+				self.predicate[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
 			else:
 				# otherwise, match the condition attribute in sigma
-				self.condition[i] = sigma[i]
+				self.predicate[i] = sigma[i]
 
 	def count_wildcards(self):
-		count = sum([1 if x == Classifier.WILDCARD_ATTRIBUTE_VALUE else 0 for x in self.condition])
+		count = sum([1 if x == Classifier.WILDCARD_ATTRIBUTE_VALUE else 0 for x in self.predicate])
 		return count
 
 	def matches_sigma(self, sigma):
-		for ci, si in zip(self.condition, sigma):
+		for ci, si in zip(self.predicate, sigma):
 			if ci != Classifier.WILDCARD_ATTRIBUTE_VALUE and ci != si:
 				return False
 		return True
@@ -106,7 +106,7 @@ class Classifier:
 		# for each attribute index i in the classifiers condition
 		for i in range(self.state_length):
 			# if the condition for cl_gen is not the wildcard nd cl_gen condition[i] does not match cl_spec condition[i]
-			if self.condition[i] != Classifier.WILDCARD_ATTRIBUTE_VALUE and self.condition[i] != other.condition[i]:
+			if self.predicate[i] != Classifier.WILDCARD_ATTRIBUTE_VALUE and self.predicate[i] != other.predicate[i]:
 				# then cl_gen is not more general than cl_spec
 				return False
 
