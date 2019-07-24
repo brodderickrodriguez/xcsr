@@ -125,12 +125,8 @@ class XCSR:
 
         # continue until we have at least one classifier that matches sigma
         while len(_match_set) == 0:
-            # iterate over all classifiers
-            for cl in self.population:
-                # check if each classifier matches the current situation (sigma)
-                if cl.matches_sigma(sigma):
-                    # if the classifier matches, add it to the new match set
-                    _match_set.append(cl)
+            # add all classifiers which match sigma to _match_set
+            _match_set = [cl for cl in self.population if cl.matches_sigma(sigma)]
 
             # collect all the unique actions found in the local match set
             all_found_actions = set([cl.action for cl in _match_set])
@@ -155,15 +151,8 @@ class XCSR:
         # initialize new classifier
         cl = Classifier(config=self.config, state_length=self.env.state_length)
 
-        # for each attribute in cl's condition
-        for i in range(self.env.state_length):
-            # if a random number is less than the probability of assigning a wildcard '#'
-            if np.random.uniform() < self.config.p_sharp:
-                # assign it to a wildcard '#'
-                cl.condition[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
-            else:
-                # otherwise, match the condition attribute in sigma
-                cl.condition[i] = sigma[i]
+        # set the covering classifier's condition and interval
+        cl.set_predicates(sigma)
 
         # get all the unique actions found in the match_set
         actions_found = set([cl.action for cl in _match_set])
@@ -230,10 +219,8 @@ class XCSR:
             # sort options by action predicted value in non-ascending order
             sorted_options = sorted(options.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
 
-            best_action = sorted_options[0][0]
-
             # return the action corresponding to the highest weighted payoff
-            return best_action
+            return sorted_options[0][0]
 
     def generate_action_set(self, action):
         # find all the classifiers in the match set which propose this action and return them
