@@ -12,14 +12,16 @@ class RMUXConfiguration(Configuration):
         # the maximum number of
         self.episodes_per_repetition = 1
 
-        self.steps_per_episode = 1.5 * 10 ** 4
+        self.steps_per_episode = 10 * 10 ** 4
 
         self.is_multi_step = False
 
-        self.predicate_delta = 0.5
+        self.predicate_1 = 0.29
+
+        self.predicate_delta = 0.1
 
         # the maximum size of the population (in micro-classifiers)
-        self.N = 1200
+        self.N = 2000
 
         # learning rate for payoff, epsilon, fitness, and action_set_size
         self.beta = 0.2
@@ -34,7 +36,7 @@ class RMUXConfiguration(Configuration):
 
         # the GA threshold. GA is applied in a set when the average time
         # since the last GA in the set is greater than theta_ga
-        self.theta_ga = 25
+        self.theta_ga = 12
 
         # the probability of applying crossover in the GA
         self.chi = 0.8
@@ -57,7 +59,7 @@ class RMUXConfiguration(Configuration):
 
         # probability during action selection of choosing the
         # action uniform randomly
-        self.p_explr = 0.01
+        self.p_explr = 0.1
 
         # the minimum number of actions that must be present in match_set or else covering will occur
         # "to cause covering to provide classifiers for every action, set equal to number of available actions"

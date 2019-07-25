@@ -15,10 +15,12 @@ class RMUXReinforcementProgram(ReinforcementProgram):
         self.step()
         self.end_of_program = True
 
-        address_bits = ''.join(str(x) for x in sigma[:2])
+        tmp_sigma = [int(round(s)) for s in sigma]
+
+        address_bits = ''.join(str(x) for x in tmp_sigma[:2])
         index_bit = int(address_bits, 2)
         data_bit_index = index_bit + len(address_bits)
-        data_bit = sigma[data_bit_index]
+        data_bit = tmp_sigma[data_bit_index]
 
         rho = int(data_bit == action)
 
