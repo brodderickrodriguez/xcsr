@@ -16,6 +16,10 @@ class MUXConfiguration(Configuration):
 
         self.is_multi_step = False
 
+        self.predicate_1 = 0.29
+
+        self.predicate_delta = 0.1
+
         # the maximum size of the population (in micro-classifiers)
         self.N = 400
 
