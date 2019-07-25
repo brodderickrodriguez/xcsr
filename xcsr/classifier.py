@@ -6,7 +6,7 @@ import numpy as np
 
 
 class Classifier:
-	WILDCARD_ATTRIBUTE_VALUE = '#'
+	WILDCARD_ATTRIBUTE_VALUE = (0, 1)
 	CLASSIFIER_ID = 0
 
 	def __init__(self, config, state_length):
@@ -18,7 +18,7 @@ class Classifier:
 		self.state_length = state_length
 
 		# condition that specifies the sensory situation which the classifier applies to
-		self.predicate = [0 for _ in range(self.state_length)]
+		self.predicate = [Classifier.WILDCARD_ATTRIBUTE_VALUE for _ in range(self.state_length)]
 
 		# action the classifier proposes
 		self.action = None
@@ -73,15 +73,12 @@ class Classifier:
 				self.predicate[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
 			else:
 				# otherwise, match the condition attribute in sigma
-				self.predicate[i] = sigma[i]
-
-	def count_wildcards(self):
-		count = sum([1 if x == Classifier.WILDCARD_ATTRIBUTE_VALUE else 0 for x in self.predicate])
-		return count
+				self.predicate[i] = (sigma[i] - np.random.uniform(high=self.config.predicate_1)),\
+									(sigma[i] + np.random.uniform(high=self.config.predicate_1))
 
 	def matches_sigma(self, sigma):
-		for ci, si in zip(self.predicate, sigma):
-			if ci != Classifier.WILDCARD_ATTRIBUTE_VALUE and ci != si:
+		for pi, si in zip(self.predicate, sigma):
+			if pi != Classifier.WILDCARD_ATTRIBUTE_VALUE and not (pi[0] <= si <= pi[1]):
 				return False
 		return True
 
@@ -89,24 +86,12 @@ class Classifier:
 		# if self and other have the same action, if self is allowed to subsume and is self is more general than other
 		return self.action == other.action and self.could_subsume() and self.is_more_general(other)
 
-	def predicate_is_more_general(self, other):
-		pass
-
 	def is_more_general(self, other):
-		# count the number of wildcards in cl_gen
-		wildcard_count = self.count_wildcards()
-
-		# count the number of wildcards in cl_spec
-		other_wildcard_count = other.count_wildcards()
-
-		# if cl_gen is not more general than cl_spec
-		if wildcard_count <= other_wildcard_count:
-			return False
-
 		# for each attribute index i in the classifiers condition
 		for i in range(self.state_length):
 			# if the condition for cl_gen is not the wildcard nd cl_gen condition[i] does not match cl_spec condition[i]
-			if self.predicate[i] != Classifier.WILDCARD_ATTRIBUTE_VALUE and self.predicate[i] != other.predicate[i]:
+			if self.predicate[i] != Classifier.WILDCARD_ATTRIBUTE_VALUE and \
+					(self.predicate[0] > other.predicate[0] or self.predicate[1] < other.predicate[1]):
 				# then cl_gen is not more general than cl_spec
 				return False
 
