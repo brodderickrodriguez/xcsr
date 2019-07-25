@@ -42,7 +42,7 @@ def _get_data_single_step(experiment_path):
 
     rhos_means = np.nanmean(rhos, axis=0)
     error_means = np.nanmean(error, axis=0)
-    cc_means = np.nanmean(cc, axis=0) / 1000
+    cc_means = np.nanmean(cc, axis=0) / 2000
 
     data = rhos_means, error_means, cc_means
     labels = 'reward', 'error', 'pop. size (/1000)'
