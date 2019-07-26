@@ -96,7 +96,7 @@ class XCSR:
                 # update previous_action_set
                 self.update_set(_action_set=self.previous_action_set, payoff=payoff)
 
-                # run gam on previous_action_set and previous_sigma inserting and possibly deleting in population
+                # run ga on previous_action_set and previous_sigma inserting and possibly deleting in population
                 self.run_ga(self.previous_action_set, previous_sigma)
 
             # if experiment is over based on information from reinforcement program
@@ -385,7 +385,7 @@ class XCSR:
                 # if the attribute at index i is already the wildcard
                 if child.predicate[i] == Classifier.WILDCARD_ATTRIBUTE_VALUE:
                     # swap it with the i-th attribute in sigma
-                    child.predicate[i] = sigma[i]
+                    child.predicate[i] = (sigma[i] - self.config.predicate_1, sigma[i] + self.config.predicate_1)
                 else:
                     # otherwise, swap it to the wildcard
                     child.predicate[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
@@ -428,7 +428,8 @@ class XCSR:
         # for each classifier currently in the population
         for cl in self.population:
             # if the other classifier is equal to the parameter classifier in both predicate and action
-            if cl.predicate == other.predicate and cl.action == other.action:
+
+            if cl.predicate_subsumes(other) and cl.action == other.action:
                 # then increment the other classifier's numerosity
                 cl.numerosity += 1
                 return
