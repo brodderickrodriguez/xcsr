@@ -86,6 +86,12 @@ class Classifier:
 		# if self and other have the same action, if self is allowed to subsume and is self is more general than other
 		return self.action == other.action and self.could_subsume() and self.is_more_general(other)
 
+	def predicate_subsumes(self, other):
+		for (s_p_min, s_p_max), (o_p_min, o_p_max) in zip(self.predicate, other.predicate):
+			if o_p_min < s_p_min or o_p_max > s_p_max:
+				return False
+		return True
+
 	def is_more_general(self, other):
 		# for each attribute index i in the classifiers condition
 		for i in range(self.state_length):
