@@ -25,9 +25,9 @@ def rmux():
     from xcsr.example_scenarios.rmux.rmux_config import RMUXConfiguration
 
     driver = XCSRDriver()
-    driver.repetitions = 5
+    driver.repetitions = 30
     driver.save_location = './xcsr/example_scenarios/rmux/data'
-    driver.experiment_name = 'TMP'
+    driver.experiment_name = 'good'
 
     driver.xcs_class = XCSR
     driver.environment_class = RMUXEnvironment
@@ -36,10 +36,9 @@ def rmux():
 
     driver.run()
 
-    dir_name = './xcsr/example_scenarios/rmux/data/' + driver.experiment_name
-    util.plot_results(dir_name, title='RMUX', interval=50)
-
-    shutil.rmtree('./xcsr/example_scenarios/rmux/data/TMP')
+    # dir_name = './xcsr/example_scenarios/rmux/data/' + driver.experiment_name
+    # util.plot_results(dir_name, title='RMUX', interval=100)
+    # shutil.rmtree('./xcsr/example_scenarios/rmux/data/TMP')
 
 
 def woods2():
