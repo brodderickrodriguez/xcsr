@@ -20,14 +20,9 @@ class RMUXEnvironment(Environment):
     def get_state(self):
         return self.state
 
-    def get_a(self):
-        c = [float(format(i * 0.1, '2g')) for i in range(11)]
-        return np.random.choice(c)
-
     def step(self, action):
         self.state = [np.random.uniform() for _ in range(self.state_length)]
         # self.state = [int(round(np.random.uniform())) for _ in range(self.state_length)]
-        # self.state = [self.get_a() for _ in range(self.state_length)]
 
     def reset(self):
         self.step(None)
