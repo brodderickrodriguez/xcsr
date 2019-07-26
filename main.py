@@ -26,7 +26,8 @@ def rmux():
 
     driver = XCSRDriver()
     driver.repetitions = 3
-    driver.save_location = '~/xcsr/xcsr/example_scenarios/rmux'
+    driver.save_location = './xcsr/example_scenarios/rmux/data'
+    driver.save_location = '/home/bcr0012/xcsr/xcsr/example_scenarios/rmux/data'
     driver.experiment_name = 'good'
 
     driver.xcs_class = XCSR
