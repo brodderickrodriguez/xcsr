@@ -10,4 +10,4 @@ source .env/bin/activate
 pip3 install numpy
 pip3 install matplotlib
 
-python3 main.py
+python3 ~/xcsr/main.py
