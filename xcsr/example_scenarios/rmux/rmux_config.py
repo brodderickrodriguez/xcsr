@@ -59,7 +59,7 @@ class RMUXConfiguration(Configuration):
 
         # probability during action selection of choosing the
         # action uniform randomly
-        self.p_explr = 0.1
+        self.p_explr = 0.5
 
         # the minimum number of actions that must be present in match_set or else covering will occur
         # "to cause covering to provide classifiers for every action, set equal to number of available actions"
