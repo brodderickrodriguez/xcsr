@@ -25,8 +25,9 @@ def rmux():
     from xcsr.example_scenarios.rmux.rmux_config import RMUXConfiguration
 
     driver = XCSRDriver()
-    driver.repetitions = 30
+    driver.repetitions = 3
     driver.save_location = './xcsr/example_scenarios/rmux/data'
+    driver.save_location = '~/xcsr_data'
     driver.experiment_name = 'good'
 
     driver.xcs_class = XCSR
