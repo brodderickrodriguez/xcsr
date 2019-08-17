@@ -17,8 +17,8 @@ def human_play_rmux():
 
 
 def human_play_woods2():
-    from xcsr.example_scenarios.woods2.woods2_environment import Woods2Environment
-    from xcsr.example_scenarios.woods2.woods2_configuration import Woods2Configuration
+    from xcsr.example_scenarios.woods2.woods2_env import Woods2Environment
+    from xcsr.example_scenarios.woods2.woods2_config import Woods2Configuration
 
     Woods2Environment(config=Woods2Configuration()).human_play()
 
@@ -60,8 +60,8 @@ def mux():
 
 
 def woods2():
-    from xcsr.example_scenarios.woods2.woods2_environment import Woods2Environment
-    from xcsr.example_scenarios.woods2.woods2_configuration import Woods2Configuration
+    from xcsr.example_scenarios.woods2.woods2_env import Woods2Environment
+    from xcsr.example_scenarios.woods2.woods2_config import Woods2Configuration
 
     driver = XCSRDriver()
     driver.config_class = Woods2Configuration
