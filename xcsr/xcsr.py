@@ -10,7 +10,7 @@ import numpy as np
 
 
 class XCSR:
-    def __init__(self, environment, reinforcement_program, configuration):
+    def __init__(self, env, config):
         # all the classifiers that currently exist
         self.population = []
 
@@ -24,13 +24,10 @@ class XCSR:
         self.previous_action_set = []
 
         # the environment object
-        self.env = environment
-
-        # the reinforcement program object
-        self.rp = reinforcement_program
+        self.env = env
 
         # the current configuration for hyper params
-        self.config = configuration
+        self.config = config
 
         # dictionary containing all rewards, expected rewards, and the number of microclassifiers
         self.metrics_history = {}
@@ -57,32 +54,30 @@ class XCSR:
         np.random.seed(int(time.time()))
         previous_rho, previous_sigma = 0, []
 
-        while not self.rp.termination_criteria_met():
+        while not self.env.termination_criteria_met():
             # get current situation from environment
             sigma = self.env.get_state()
             logging.debug('sigma = {}'.format(sigma))
 
             # generate match set. uses population and sigma
-            self.match_set = self.generate_match_set(sigma)
+            self.match_set = self._generate_match_set(sigma)
             logging.debug('match_set = {}'.format(self.match_set))
 
             # generate prediction dictionary
-            predictions = self.generate_prediction_dictionary()
+            predictions = self._generate_prediction_dictionary()
             logging.debug('predictions = {}'.format(predictions))
 
             # select action using predictions
-            action = self.select_action(predictions)
+            action = self._select_action(predictions)
             logging.debug('selected action = {}'.format(action))
 
             # generate action set using action and match_set
-            self.action_set = self.generate_action_set(action)
+            self.action_set = self._generate_action_set(action)
             logging.debug('action_set = {}'.format(self.action_set))
 
-            # commit action
-            self.env.step(action)
+            # commit action and get payoff for action
+            rho = self.env.step(action)
 
-            # get payoff for committing this action
-            rho = self.rp.determine_rho(sigma, action)
             logging.debug('payoff (rho) = {}'.format(rho))
 
             self._update_metrics(rho=rho, predicted_rho=predictions[action])
@@ -94,18 +89,18 @@ class XCSR:
                 payoff = previous_rho + self.config.gamma * max(non_null_actions)
 
                 # update previous_action_set
-                self.update_set(_action_set=self.previous_action_set, payoff=payoff)
+                self._update_set(_action_set=self.previous_action_set, payoff=payoff)
 
                 # run ga on previous_action_set and previous_sigma inserting and possibly deleting in population
-                self.run_ga(self.previous_action_set, previous_sigma)
+                self._run_ga(self.previous_action_set, previous_sigma)
 
-            # if experiment is over based on information from reinforcement program
-            if self.rp.end_of_program:
+            # if experiment is over based on information from environment
+            if self.env.end_of_program:
                 # update action_set
-                self.update_set(_action_set=self.action_set, payoff=rho)
+                self._update_set(_action_set=self.action_set, payoff=rho)
 
                 # run ga on previous_action_set and previous_sigma inserting and possibly deleting in population
-                self.run_ga(self.action_set, sigma)
+                self._run_ga(self.action_set, sigma)
 
                 # empty previous_action_set
                 self.previous_action_set = []
@@ -119,7 +114,7 @@ class XCSR:
                 # update previous sigma
                 previous_sigma = sigma
 
-    def generate_match_set(self, sigma):
+    def _generate_match_set(self, sigma):
         # local variable to hold all matching classifiers
         _match_set = []
 
@@ -134,20 +129,20 @@ class XCSR:
             # if the length of all unique actions is less than our threshold, theta_mna, begin covering procedure
             if len(all_found_actions) < self.config.theta_mna:
                 # create a new classifier, cl_c using the local match set and the current situation (sigma)
-                cl_c = self.generate_covering_classifier(_match_set, sigma)
+                cl_c = self._generate_covering_classifier(_match_set, sigma)
 
                 # add the new classifier cl_c to the population
                 self.population.append(cl_c)
 
                 # choose individual for deletion by beta-distributed epsilon-greedy selection
-                self.delete_from_population()
+                self._delete_from_population()
 
                 # empty local match set M
                 _match_set = []
 
         return _match_set
 
-    def generate_covering_classifier(self, _match_set, sigma):
+    def _generate_covering_classifier(self, _match_set, sigma):
         # initialize new classifier
         cl = Classifier(config=self.config, state_length=self.env.state_length)
 
@@ -169,11 +164,11 @@ class XCSR:
             cl.action = np.random.choice(self.config.possible_actions)
 
         # set the time step to the current time step
-        cl.time_step = self.rp.time_step
+        cl.time_step = self.env.time_step
 
         return cl
 
-    def generate_prediction_dictionary(self):
+    def _generate_prediction_dictionary(self):
         # initialize the prediction dictionary
         pa = {a: None for a in self.env.possible_actions}
 
@@ -201,7 +196,7 @@ class XCSR:
 
         return pa
 
-    def select_action(self, predictions):
+    def _select_action(self, predictions):
         # select action according to an epsilon-greedy policy
         if np.random.uniform() < self.config.p_explr:
             logging.debug('selecting random action...')
@@ -222,11 +217,11 @@ class XCSR:
             # return the action corresponding to the highest weighted payoff
             return sorted_options[0][0]
 
-    def generate_action_set(self, action):
+    def _generate_action_set(self, action):
         # find all the classifiers in the match set which propose this action and return them
         return [cl for cl in self.match_set if cl.action == action]
 
-    def update_set(self, _action_set, payoff):
+    def _update_set(self, _action_set, payoff):
         # for each classifier in _action_set
         for cl in _action_set:
             # update experience
@@ -255,9 +250,9 @@ class XCSR:
                 cl.action_set_size += self.config.beta * summed_difference
 
         # update fitness for each classifier in _action_set
-        self.update_fitness(_action_set)
+        self._update_fitness(_action_set)
 
-    def update_fitness(self, _action_set):
+    def _update_fitness(self, _action_set):
         # set a local variable to track the accuracy over the entire set_
         accuracy_sum = 0.0
 
@@ -280,7 +275,7 @@ class XCSR:
         for cl in _action_set:
             cl.fitness += self.config.beta * (((k[cl] * cl.numerosity) / accuracy_sum) - cl.fitness)
 
-    def run_ga(self, _action_set, sigma):
+    def _run_ga(self, _action_set, sigma):
         # get average time since last GA
         weighted_time = sum([cl.last_time_step * cl.numerosity for cl in _action_set])
 
@@ -291,16 +286,16 @@ class XCSR:
         average_time = weighted_time / num_micro_classifiers
 
         # if the average time since last GA is less than the threshold then do nothing
-        if self.rp.time_step - average_time <= self.config.theta_ga:
+        if self.env.time_step - average_time <= self.config.theta_ga:
             return
 
         # update the time since last GA for all classifiers
         for cl in _action_set:
-            cl.last_time_step = self.rp.time_step
+            cl.last_time_step = self.env.time_step
 
         # select two parents from the set_
-        parent1 = self.select_offspring(_action_set)
-        parent2 = self.select_offspring(_action_set)
+        parent1 = self._select_offspring(_action_set)
+        parent2 = self._select_offspring(_action_set)
 
         # copy each parent and create two new classifiers, child1 and child2
         child1, child2 = parent1.copy(), parent2.copy()
@@ -314,7 +309,7 @@ class XCSR:
         # if a random number is less than the threshold for applying crossover
         if np.random.uniform() < self.config.chi:
             # apply crossover to child1 and child2
-            self.apply_crossover(child1, child2)
+            self._apply_crossover(child1, child2)
 
             # set child1 and child2 payoff to the mean of both parents
             child1.predicted_payoff = child2.predicted_payoff = \
@@ -329,7 +324,7 @@ class XCSR:
         # for both children
         for child in [child1, child2]:
             # apply mutation to child according to sigma
-            self.apply_mutation(child, sigma)
+            self._apply_mutation(child, sigma)
 
             # if subsumption is true
             if self.config.do_ga_subsumption:
@@ -343,16 +338,16 @@ class XCSR:
                     parent2.numerosity += 1
                 else:
                     # otherwise, add the child to the population of classifiers
-                    self.insert_in_population(child)
+                    self._insert_in_population(child)
             else:
                 # if subsumption is false, add the child to the population of classifiers
-                self.insert_in_population(child)
+                self._insert_in_population(child)
 
             # choose individual for deletion by beta-distributed epsilon-greedy selection
-            self.delete_from_population()
+            self._delete_from_population()
 
     @staticmethod
-    def select_offspring(_action_set):
+    def _select_offspring(_action_set):
         # if some random number is less than a threshold then select using a beta distribution the best classifier
         if np.random.uniform() < 0.5:
             # select a bias index
@@ -368,7 +363,7 @@ class XCSR:
             return np.random.choice(_action_set)
 
     @staticmethod
-    def apply_crossover(child1, child2):
+    def _apply_crossover(child1, child2):
         # find two values in [0, len(predicate)) s.t. x <= y
         x = np.random.choice(range(len(child1.predicate)))
         y = np.random.choice(range(x, len(child1.predicate)))
@@ -377,7 +372,7 @@ class XCSR:
         for i in range(int(x), int(y)):
             child1.predicate[i], child2.predicate[i] = child2.predicate[i], child1.predicate[i]
 
-    def apply_mutation(self, child, sigma):
+    def _apply_mutation(self, child, sigma):
         # for each index in the child's predicate
         for i in range(self.env.state_length):
             # if some random number is less than the probability of mutating an allele in the offspring
@@ -398,7 +393,7 @@ class XCSR:
             # assign the action of this child to that random action
             child.action = np.random.choice(other_possible_actions)
 
-    def delete_from_population(self):
+    def _delete_from_population(self):
         # if the number of classifiers is less than the max allowed the do nothing
         if self.config.N > sum([cl.numerosity for cl in self.population]):
             return
@@ -424,7 +419,7 @@ class XCSR:
             cl = np.random.choice(self.population)
             self.population.remove(cl)
 
-    def insert_in_population(self, other):
+    def _insert_in_population(self, other):
         # for each classifier currently in the population
         for cl in self.population:
             # if the other classifier is equal to the parameter classifier in both predicate and action

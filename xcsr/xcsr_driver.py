@@ -4,7 +4,6 @@
 
 from xcsr.xcsr import XCSR
 from xcsr.environment import Environment
-from xcsr.reinforcement_program import ReinforcementProgram
 
 import numpy as np
 import multiprocessing
@@ -18,10 +17,8 @@ class XCSRDriver:
     def __init__(self):
         logging.info('XCS Driver initialized')
 
-        self.xcs_class = None
-        self.reinforcement_program_class = None
-        self.environment_class = None
-        self.configuration_class = None
+        self.config_class = None
+        self.env_class = None
         self.repetitions = 10
         self.save_location = './'
         self.experiment_name = None
@@ -44,32 +41,18 @@ class XCSRDriver:
         if self.repetitions < 1:
             raise ValueError('repetitions cannot be less than 1')
 
-        # check if user has passed an xcs class
-        if self.xcs_class is None:
-            raise ValueError('xcs_class must be specified before running \
-                    and it must be a class not an instance of a class')
+        # check if user specified a configuration
+        if self.config_class is None:
+            raise ValueError('config class must be specified')
+
+        # check if user set an environment class
+        if self.env_class is None:
+            raise ValueError('env class must be specified in the configuration before '
+                             'running and it must be a class not an instance of a class')
 
         # check if user passed a class and not a class instance
-        if isinstance(self.xcs_class, XCSR):
-            raise ValueError('xcs_class cannot be an instance')
-
-        # check if user passed an environment class
-        if self.environment_class is None:
-            raise ValueError('environment_class must be specified before \
-                    running and it must be a class not an instance of a class')
-
-        # check if user passed a class and not a class instance
-        if isinstance(self.environment_class, Environment):
-            raise ValueError('environment_class cannot be an instance')
-
-        # check if a user passed a reinforcement_program class
-        if self.reinforcement_program_class is None:
-            raise ValueError('reinforcement_program_class must be specified \
-                    before running and it must be a class not an instance of a class')
-
-        # check if user passed a class and not a class instance
-        if isinstance(self.reinforcement_program_class, ReinforcementProgram):
-            raise ValueError('reinforcement_program_class cannot be an instance')
+        if isinstance(self.env_class, Environment):
+            raise ValueError('config.env cannot be an instance, must be an uninitialized class')
 
     def _setup_directories(self):
         time_now = str(int(time.time()))
@@ -84,16 +67,17 @@ class XCSRDriver:
             os.mkdir(self._root_data_directory + directory)
 
         metadata_file = self._root_data_directory + '/metadata.json'
-        metadata = {key: val for key, val in self.configuration_class().__dict__.items()}
+        metadata = {key: val for key, val in self.config_class().__dict__.items()}
         metadata['repetitions'] = self.repetitions
         metadata['name'] = self.experiment_name
         metadata['root_dir'] = self._root_data_directory
         metadata['start_time'] = time_now
+        metadata['environment_class'] = None
         f = open(metadata_file, 'w')
         json.dump(metadata, f)
 
     def _run_processes(self):
-        if self.configuration_class().is_multi_step:
+        if self.config_class().is_multi_step:
             processes = []
 
             for process in range(self.repetitions):
@@ -113,11 +97,10 @@ class XCSRDriver:
     def _run_single_step_repetition(self, repetition_num):
         print('repetition {} started'.format(repetition_num))
 
-        config = self.configuration_class()
-        env = self.environment_class()
-        rp = self.reinforcement_program_class(configuration=config)
+        config = self.config_class()
+        env = self.env_class(config=config)
 
-        xcs_object = XCSR(environment=env, reinforcement_program=rp, configuration=config)
+        xcs_object = XCSR(env=env, config=config)
         xcs_object.run_experiment()
 
         self._save_repetition(xcs_object.metrics_history, repetition_num)
@@ -136,16 +119,15 @@ class XCSRDriver:
 
     def _run_multi_step_repetition(self, repetition_num):
         print('repetition {} started'.format(repetition_num))
-        config = self.configuration_class()
-        env = self.environment_class()
-        rp = self.reinforcement_program_class(configuration=config)
+
+        config = self.config_class()
+        env = self.env_class(config=config)
         metrics, i = [], 0
 
-        xcs_object = XCSR(environment=env, reinforcement_program=rp, configuration=config)
+        xcs_object = XCSR(env=env, config=config)
 
         while i < config.episodes_per_repetition:
             env.reset()
-            rp.reset()
             xcs_object.reset_metrics()
 
             config.p_explr = 0 if np.random.uniform() < 0.5 else 1
