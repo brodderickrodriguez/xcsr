@@ -6,30 +6,41 @@ import logging
 
 
 class Environment:
-    def __init__(self):
+    DEFAULT_MAX_STEPS = 10 ** 4
+
+    def __init__(self, config):
         logging.info('environment initialized')
+
+        self.max_steps = config.steps_per_episode
 
         self.state = None
         self.state_length = 0
         self.possible_actions = []
 
+        self.end_of_program = False
+        self.time_step = 0
+
     def get_state(self):
+        raise NotImplementedError()
+
+    def termination_criteria_met(self):
         raise NotImplementedError()
 
     def step(self, action):
         raise NotImplementedError()
 
     def reset(self):
-        raise NotImplementedError()
+        self.end_of_program = False
+        self.time_step = 0
 
     def print_world(self):
         raise NotImplementedError()
 
-    def human_play(self, reinforcement_program):
-        while not reinforcement_program.termination_criteria_met():
+    def human_play(self):
+        while not self.termination_criteria_met():
             self.print_world()
 
-            state = self.get_state()
+            print(self.get_state())
 
             try:
                 action = int(input('input action: '))
@@ -37,8 +48,8 @@ class Environment:
                 print('invalid action')
                 continue
 
-            self.step(action)
+            rho = self.step(action)
 
-            print('reward:\t', reinforcement_program.determine_rho(state, action))
-            print('eop?:\t', reinforcement_program.end_of_program)
+            print('reward:\t', rho)
+            print('eop?:\t', self.end_of_program)
             print()
