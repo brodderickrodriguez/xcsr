@@ -12,7 +12,7 @@ class MUXConfiguration(Configuration):
         # the maximum number of
         self.episodes_per_repetition = 1
 
-        self.steps_per_episode = 1.5 * 10 ** 4
+        self.steps_per_episode = 10 ** 4
 
         self.is_multi_step = False
 

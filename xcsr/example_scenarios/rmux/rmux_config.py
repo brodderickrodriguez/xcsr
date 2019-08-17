@@ -12,7 +12,7 @@ class RMUXConfiguration(Configuration):
         # the maximum number of
         self.episodes_per_repetition = 1
 
-        self.steps_per_episode = 10 ** 6
+        self.steps_per_episode = 10 ** 5
 
         self.is_multi_step = False
 
@@ -21,7 +21,7 @@ class RMUXConfiguration(Configuration):
         self.predicate_delta = 0.1
 
         # the maximum size of the population (in micro-classifiers)
-        self.N = 2000
+        self.N = 10000
 
         # learning rate for payoff, epsilon, fitness, and action_set_size
         self.beta = 0.2
