@@ -12,22 +12,22 @@ import numpy as np
 class XCSR:
     def __init__(self, env, config):
         # all the classifiers that currently exist
-        self.population = []
+        self._population = []
 
         # formed from population. all classifiers that their predicate matches the current state
-        self.match_set = []
+        self._match_set = []
 
         # formed from match_set. all classifiers that propose the action which was committed
-        self.action_set = []
+        self._action_set = []
 
         # the action_set which was active at the previous time_step
-        self.previous_action_set = []
+        self._previous_action_set = []
 
         # the environment object
-        self.env = env
+        self._env = env
 
         # the current configuration for hyper params
-        self.config = config
+        self._config = config
 
         # dictionary containing all rewards, expected rewards, and the number of microclassifiers
         self.metrics_history = {}
@@ -44,24 +44,27 @@ class XCSR:
         self.metrics_history['rhos'].append(rho)
 
         # save the number of microclassifiers at this time step
-        num_micro_classifiers = sum([cl.numerosity for cl in self.population])
+        num_micro_classifiers = sum([cl.numerosity for cl in self._population])
         self.metrics_history['microclassifier_counts'].append(num_micro_classifiers)
 
         # increment the number of steps
         self.metrics_history['steps'] += 1
 
+    def get_population(self):
+        return self._population
+
     def run_experiment(self):
         np.random.seed(int(time.time()))
         previous_rho, previous_sigma = 0, []
 
-        while not self.env.termination_criteria_met():
+        while not self._env.termination_criteria_met():
             # get current situation from environment
-            sigma = self.env.get_state()
+            sigma = self._env.get_state()
             logging.debug('sigma = {}'.format(sigma))
 
             # generate match set. uses population and sigma
-            self.match_set = self._generate_match_set(sigma)
-            logging.debug('match_set = {}'.format(self.match_set))
+            self._match_set = self._generate_match_set(sigma)
+            logging.debug('match_set = {}'.format(self._match_set))
 
             # generate prediction dictionary
             predictions = self._generate_prediction_dictionary()
@@ -72,41 +75,41 @@ class XCSR:
             logging.debug('selected action = {}'.format(action))
 
             # generate action set using action and match_set
-            self.action_set = self._generate_action_set(action)
-            logging.debug('action_set = {}'.format(self.action_set))
+            self._action_set = self._generate_action_set(action)
+            logging.debug('action_set = {}'.format(self._action_set))
 
             # commit action and get payoff for action
-            rho = self.env.step(action)
+            rho = self._env.step(action)
 
             logging.debug('payoff (rho) = {}'.format(rho))
 
             self._update_metrics(rho=rho, predicted_rho=predictions[action])
 
             # if previous_action_set is not empty
-            if len(self.previous_action_set) > 0:
+            if len(self._previous_action_set) > 0:
                 # compute discounted payoff
                 non_null_actions = [v for v in predictions.values() if v is not None]
-                payoff = previous_rho + self.config.gamma * max(non_null_actions)
+                payoff = previous_rho + self._config.gamma * max(non_null_actions)
 
                 # update previous_action_set
-                self._update_set(_action_set=self.previous_action_set, payoff=payoff)
+                self._update_set(_action_set=self._previous_action_set, payoff=payoff)
 
                 # run ga on previous_action_set and previous_sigma inserting and possibly deleting in population
-                self._run_ga(self.previous_action_set, previous_sigma)
+                self._run_ga(self._previous_action_set, previous_sigma)
 
             # if experiment is over based on information from environment
-            if self.env.end_of_program:
+            if self._env.end_of_program:
                 # update action_set
-                self._update_set(_action_set=self.action_set, payoff=rho)
+                self._update_set(_action_set=self._action_set, payoff=rho)
 
                 # run ga on previous_action_set and previous_sigma inserting and possibly deleting in population
-                self._run_ga(self.action_set, sigma)
+                self._run_ga(self._action_set, sigma)
 
                 # empty previous_action_set
-                self.previous_action_set = []
+                self._previous_action_set = []
             else:
                 # update previous_action_set
-                self.previous_action_set = self.action_set
+                self._previous_action_set = self._action_set
 
                 # update previous rho
                 previous_rho = rho
@@ -121,18 +124,18 @@ class XCSR:
         # continue until we have at least one classifier that matches sigma
         while len(_match_set) == 0:
             # add all classifiers which match sigma to _match_set
-            _match_set = [cl for cl in self.population if cl.matches_sigma(sigma)]
+            _match_set = [cl for cl in self._population if cl.matches_sigma(sigma)]
 
             # collect all the unique actions found in the local match set
             all_found_actions = set([cl.action for cl in _match_set])
 
             # if the length of all unique actions is less than our threshold, theta_mna, begin covering procedure
-            if len(all_found_actions) < self.config.theta_mna:
+            if len(all_found_actions) < self._config.theta_mna:
                 # create a new classifier, cl_c using the local match set and the current situation (sigma)
                 cl_c = self._generate_covering_classifier(_match_set, sigma)
 
                 # add the new classifier cl_c to the population
-                self.population.append(cl_c)
+                self._population.append(cl_c)
 
                 # choose individual for deletion by beta-distributed epsilon-greedy selection
                 self._delete_from_population()
@@ -144,7 +147,7 @@ class XCSR:
 
     def _generate_covering_classifier(self, _match_set, sigma):
         # initialize new classifier
-        cl = Classifier(config=self.config, state_length=self.env.state_length)
+        cl = Classifier(config=self._config, state_length=self._env.state_length)
 
         # set the covering classifier's predicate
         cl.set_predicates(sigma)
@@ -153,7 +156,7 @@ class XCSR:
         actions_found = set([cl.action for cl in _match_set])
 
         # subtract the possible actions from the actions found
-        difference_actions = list(set(self.env.possible_actions) - actions_found)
+        difference_actions = list(set(self._env.possible_actions) - actions_found)
 
         # if there are possible actions that are not in the actions_found
         if len(difference_actions) > 0:
@@ -161,21 +164,21 @@ class XCSR:
             cl.action = np.random.choice(difference_actions)
         else:
             # find a random action in self.config.possible_actions
-            cl.action = np.random.choice(self.config.possible_actions)
+            cl.action = np.random.choice(self._config.possible_actions)
 
         # set the time step to the current time step
-        cl.time_step = self.env.time_step
+        cl.time_step = self._env.time_step
 
         return cl
 
     def _generate_prediction_dictionary(self):
         # initialize the prediction dictionary
-        pa = {a: None for a in self.env.possible_actions}
+        pa = {a: None for a in self._env.possible_actions}
 
         # initialize the fitness sum dictionary
-        fsa = {a: 0.0 for a in self.env.possible_actions}
+        fsa = {a: 0.0 for a in self._env.possible_actions}
 
-        for cl in self.match_set:
+        for cl in self._match_set:
             # if the value in prediction dictionary for cl.action is None
             if pa[cl.action] is None:
                 # set it by accounting for fitness and predicted_payoff
@@ -198,7 +201,7 @@ class XCSR:
 
     def _select_action(self, predictions):
         # select action according to an epsilon-greedy policy
-        if np.random.uniform() < self.config.p_explr:
+        if np.random.uniform() < self._config.p_explr:
             logging.debug('selecting random action...')
 
             # get all actions that have some predicted value
@@ -219,7 +222,7 @@ class XCSR:
 
     def _generate_action_set(self, action):
         # find all the classifiers in the match set which propose this action and return them
-        return [cl for cl in self.match_set if cl.action == action]
+        return [cl for cl in self._match_set if cl.action == action]
 
     def _update_set(self, _action_set, payoff):
         # for each classifier in _action_set
@@ -227,19 +230,19 @@ class XCSR:
             # update experience
             cl.experience += 1
 
-            experience_under_threshold = cl.experience < (1 / self.config.beta)
+            experience_under_threshold = cl.experience < (1 / self._config.beta)
 
             # update predicted_payoff
             if experience_under_threshold:
                 cl.predicted_payoff += (payoff - cl.predicted_payoff) / cl.experience
             else:
-                cl.predicted_payoff += self.config.beta * (payoff - cl.predicted_payoff)
+                cl.predicted_payoff += self._config.beta * (payoff - cl.predicted_payoff)
 
             # update error (epsilon)
             if experience_under_threshold:
                 cl.epsilon += (np.abs(payoff - cl.predicted_payoff) - cl.epsilon) / cl.experience
             else:
-                cl.epsilon += self.config.beta * (np.abs(payoff - cl.predicted_payoff) - cl.epsilon)
+                cl.epsilon += self._config.beta * (np.abs(payoff - cl.predicted_payoff) - cl.epsilon)
 
             summed_difference = sum([c.numerosity - cl.action_set_size for c in _action_set])
 
@@ -247,7 +250,7 @@ class XCSR:
             if experience_under_threshold:
                 cl.action_set_size += summed_difference / cl.experience
             else:
-                cl.action_set_size += self.config.beta * summed_difference
+                cl.action_set_size += self._config.beta * summed_difference
 
         # update fitness for each classifier in _action_set
         self._update_fitness(_action_set)
@@ -262,18 +265,18 @@ class XCSR:
         # for each classifier in set_
         for cl in _action_set:
             # if classifier error is less than the error threshold
-            if cl.epsilon < self.config.epsilon_0:
+            if cl.epsilon < self._config.epsilon_0:
                 # set the accuracy to 100%
                 k[cl] = 1
             else:
-                k[cl] = ((cl.epsilon / self.config.epsilon_0) ** -self.config.v) * self.config.alpha
+                k[cl] = ((cl.epsilon / self._config.epsilon_0) ** -self._config.v) * self._config.alpha
 
             # update accuracy_sum using a weighted sum based on classifier numerosity
             accuracy_sum += k[cl] * cl.numerosity
 
         # for each classifier in set_
         for cl in _action_set:
-            cl.fitness += self.config.beta * (((k[cl] * cl.numerosity) / accuracy_sum) - cl.fitness)
+            cl.fitness += self._config.beta * (((k[cl] * cl.numerosity) / accuracy_sum) - cl.fitness)
 
     def _run_ga(self, _action_set, sigma):
         # get average time since last GA
@@ -286,12 +289,12 @@ class XCSR:
         average_time = weighted_time / num_micro_classifiers
 
         # if the average time since last GA is less than the threshold then do nothing
-        if self.env.time_step - average_time <= self.config.theta_ga:
+        if self._env.time_step - average_time <= self._config.theta_ga:
             return
 
         # update the time since last GA for all classifiers
         for cl in _action_set:
-            cl.last_time_step = self.env.time_step
+            cl.last_time_step = self._env.time_step
 
         # select two parents from the set_
         parent1 = self._select_offspring(_action_set)
@@ -307,7 +310,7 @@ class XCSR:
         child1.experience = child2.experience = 0
 
         # if a random number is less than the threshold for applying crossover
-        if np.random.uniform() < self.config.chi:
+        if np.random.uniform() < self._config.chi:
             # apply crossover to child1 and child2
             self._apply_crossover(child1, child2)
 
@@ -327,7 +330,7 @@ class XCSR:
             self._apply_mutation(child, sigma)
 
             # if subsumption is true
-            if self.config.do_ga_subsumption:
+            if self._config.do_ga_subsumption:
                 # check if parent1 subsumes child
                 if parent1.does_subsume(child):
                     # if it does, increment parent1 numerosity
@@ -374,37 +377,37 @@ class XCSR:
 
     def _apply_mutation(self, child, sigma):
         # for each index in the child's predicate
-        for i in range(self.env.state_length):
+        for i in range(self._env.state_length):
             # if some random number is less than the probability of mutating an allele in the offspring
-            if np.random.uniform() < self.config.mu:
+            if np.random.uniform() < self._config.mu:
                 # if the attribute at index i is already the wildcard
                 if child.predicate[i] == Classifier.WILDCARD_ATTRIBUTE_VALUE:
                     # swap it with the i-th attribute in sigma
-                    child.predicate[i] = (sigma[i] - self.config.predicate_1, sigma[i] + self.config.predicate_1)
+                    child.predicate[i] = (sigma[i] - self._config.predicate_1, sigma[i] + self._config.predicate_1)
                 else:
                     # otherwise, swap it to the wildcard
                     child.predicate[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
 
         # if some random number is less than the probability of mutating an allele in the offspring
-        if np.random.uniform() < self.config.mu:
+        if np.random.uniform() < self._config.mu:
             # then generate a list of all the other possible actions
-            other_possible_actions = list(set(self.env.possible_actions) - {child.action})
+            other_possible_actions = list(set(self._env.possible_actions) - {child.action})
 
             # assign the action of this child to that random action
             child.action = np.random.choice(other_possible_actions)
 
     def _delete_from_population(self):
         # if the number of classifiers is less than the max allowed the do nothing
-        if self.config.N > sum([cl.numerosity for cl in self.population]):
+        if self._config.N > sum([cl.numerosity for cl in self._population]):
             return
 
         # if some random number is less than a threshold then select using a beta distribution the best classifier
         if np.random.uniform() < 0.5:
             # select a bias index
-            choice_point = int(np.floor(np.random.beta(1, 5) * len(self.population)))
+            choice_point = int(np.floor(np.random.beta(1, 5) * len(self._population)))
 
             # sort the _action_set
-            sorted_population = sorted(self.population, reverse=False)
+            sorted_population = sorted(self._population, reverse=False)
 
             # grab the classifier corresponding to the choice point
             cl = sorted_population[choice_point]
@@ -413,15 +416,15 @@ class XCSR:
             if cl.numerosity > 1:
                 cl.numerosity -= 1
             else:
-                self.population.remove(cl)
+                self._population.remove(cl)
         else:
             # otherwise choose a random classifier to delete
-            cl = np.random.choice(self.population)
-            self.population.remove(cl)
+            cl = np.random.choice(self._population)
+            self._population.remove(cl)
 
     def _insert_in_population(self, other):
         # for each classifier currently in the population
-        for cl in self.population:
+        for cl in self._population:
             # if the other classifier is equal to the parameter classifier in both predicate and action
 
             if cl.predicate_subsumes(other) and cl.action == other.action:
@@ -430,4 +433,4 @@ class XCSR:
                 return
 
         # if this classifier is unique then add it to the population
-        self.population.append(other)
+        self._population.append(other)
