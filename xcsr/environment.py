@@ -6,19 +6,15 @@ import logging
 
 
 class Environment:
-    DEFAULT_MAX_STEPS = 10 ** 4
-
     def __init__(self, config):
         logging.info('environment initialized')
-
-        self.max_steps = config.steps_per_episode
-
-        self.state = None
         self.state_length = 0
         self.possible_actions = []
-
         self.end_of_program = False
         self.time_step = 0
+
+        self._max_steps = config.steps_per_episode
+        self._state = None
 
     def get_state(self):
         raise NotImplementedError()

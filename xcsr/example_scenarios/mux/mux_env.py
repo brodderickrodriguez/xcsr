@@ -17,10 +17,10 @@ class MUXEnvironment(Environment):
         self._set_state()
 
     def get_state(self):
-        return self.state
+        return self._state
 
     def _set_state(self):
-        self.state = [int(round(np.random.uniform())) for _ in range(self.state_length)]
+        self._state = [int(round(np.random.uniform())) for _ in range(self.state_length)]
 
     def step(self, action):
         self.time_step += 1
@@ -31,16 +31,16 @@ class MUXEnvironment(Environment):
     def _determine_rho(self, action):
         self.end_of_program = True
 
-        address_bits = ''.join(str(x) for x in self.state[:2])
+        address_bits = ''.join(str(x) for x in self._state[:2])
         index_bit = int(address_bits, 2)
         data_bit_index = index_bit + len(address_bits)
-        data_bit = self.state[data_bit_index]
+        data_bit = self._state[data_bit_index]
 
         rho = int(data_bit == action)
         return rho
 
     def termination_criteria_met(self):
-        return self.time_step >= self.max_steps
+        return self.time_step >= self._max_steps
 
     def print_world(self):
-        print(self.state)
+        print(self._state)
