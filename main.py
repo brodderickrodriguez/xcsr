@@ -55,7 +55,7 @@ def mux():
     driver.run()
 
     dir_name = driver.save_location + '/' + driver.experiment_name
-    # util.plot_results(dir_name, title='MUX', interval=50)
+    util.plot_results(dir_name, title='MUX', interval=50)
     shutil.rmtree(dir_name)
 
 
@@ -80,6 +80,7 @@ if __name__ == '__main__':
     print('XCSR')
     # logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     # human_play_rmux()
+    # mux()
     # rmux()
     woods2()
     # human_play_woods2()
