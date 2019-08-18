@@ -38,13 +38,13 @@ class Woods2Environment(Environment):
         for i in range(0, len(self.state), block_size):
             for j in range(0, len(self.state[i]), block_size):
                 for k in range(i + 1, i + block_size - 1):
-                    for l in range(j + 1, j + block_size - 1):
-                        if k == i + 1 and l == j + 3:
+                    for m in range(j + 1, j + block_size - 1):
+                        if k == i + 1 and m == j + 3:
                             choice = np.random.choice(list(self._food_types.keys()))
                         else:
                             choice = np.random.choice(list(self._rock_types.keys()))
 
-                        self.state[k, l] = choice
+                        self.state[k, m] = choice
 
         blanks = np.where(self.state == '.')
         rand_idx = int(np.floor(np.random.uniform() * len(blanks[0])))
@@ -78,11 +78,10 @@ class Woods2Environment(Environment):
         [print(''.join(e)) for e in self.state]
 
     def get_state(self):
-        mod_y = lambda a: a % self.state.shape[0]
-        mod_x = lambda a: a % self.state.shape[1]
-
         vision_map = [(self._loc_y + dy, self._loc_x + dx) for dy, dx in self._action_map().values()]
-        vision = [self.state[mod_y(y), mod_x(x)] for y, x in vision_map]
+        vision_map = [(y % self.state.shape[0], x % self.state.shape[1]) for y, x in vision_map]
+
+        vision = [self.state[y, x] for y, x in vision_map]
         raw_state = [list(self._encoding[vision[i]]) for i in range(len(vision))]
 
         agent_state = np.vectorize(lambda i: int(i))(raw_state).reshape(3 * 8)
