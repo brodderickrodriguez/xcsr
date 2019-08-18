@@ -9,7 +9,7 @@ class RMUXConfiguration(Configuration):
     def __init__(self):
         Configuration.__init__(self)
 
-        # the maximum number of
+        # the maximum number of steps in each problem (repetition)
         self.episodes_per_repetition = 1
 
         self.steps_per_episode = 10 ** 5
