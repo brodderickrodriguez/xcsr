@@ -66,13 +66,13 @@ def woods2():
     driver = XCSRDriver()
     driver.config_class = Woods2Configuration
     driver.env_class = Woods2Environment
-    driver.repetitions = 1
+    driver.repetitions = 10
     driver.save_location = './xcsr/example_scenarios/woods2/data'
     driver.experiment_name = 'TMP'
     driver.run()
 
     dir_name = driver.save_location + '/' + driver.experiment_name
-    # util.plot_results(dir_name, title='W2', interval=50)
+    util.plot_results(dir_name, title='W2', interval=100)
     shutil.rmtree(dir_name)
 
 
