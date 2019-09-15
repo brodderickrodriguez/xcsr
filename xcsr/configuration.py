@@ -8,6 +8,9 @@ import numpy as np
 class Configuration:
     def __init__(self):
 
+        self.state_shape = (0,)
+        self.action_shape = (0,)
+
         # the maximum number of steps in each problem (repetition)
         self.episodes_per_repetition = 10 ** 4
 

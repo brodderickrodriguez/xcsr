@@ -3,6 +3,7 @@
 # july 12 2019
 
 from xcsr.classifier import Classifier
+from xcsr import util
 
 import time
 import logging
@@ -83,7 +84,7 @@ class XCSR:
 
             logging.debug('payoff (rho) = {}'.format(rho))
 
-            self._update_metrics(rho=rho, predicted_rho=predictions[action])
+            self._update_metrics(rho=rho, predicted_rho=predictions[tuple(action)])
 
             # if previous_action_set is not empty
             if len(self._previous_action_set) > 0:
@@ -127,7 +128,7 @@ class XCSR:
             _match_set = [cl for cl in self._population if cl.matches_sigma(sigma)]
 
             # collect all the unique actions found in the local match set
-            all_found_actions = set([cl.action for cl in _match_set])
+            all_found_actions = util.get_unique_from_ndarray([cl.action for cl in _match_set])
 
             # if the length of all unique actions is less than our threshold, theta_mna, begin covering procedure
             if len(all_found_actions) < self._config.theta_mna:
@@ -147,24 +148,28 @@ class XCSR:
 
     def _generate_covering_classifier(self, _match_set, sigma):
         # initialize new classifier
-        cl = Classifier(config=self._config, state_length=self._env.state_length)
+        cl = Classifier(config=self._config)
 
         # set the covering classifier's predicate
         cl.set_predicates(sigma)
 
         # get all the unique actions found in the match_set
-        actions_found = set([cl.action for cl in _match_set])
+        actions_found = util.get_unique_from_ndarray([cl.action for cl in _match_set], return_as_tuples=True)
 
-        # subtract the possible actions from the actions found
-        difference_actions = list(set(self._env.possible_actions) - actions_found)
+         # subtract the possible actions from the actions found
+        difference_actions = [np.array(action) 
+                                for action in map(lambda a: tuple(a), self._env.possible_actions) 
+                                if action not in actions_found]
 
         # if there are possible actions that are not in the actions_found
         if len(difference_actions) > 0:
+            idx = int(np.floor(np.random.uniform() * len(difference_actions)))
             # find a random action in difference_actions
-            cl.action = np.random.choice(difference_actions)
+            cl.action = difference_actions[idx]
         else:
+            idx = int(np.floor(np.random.uniform() * len(self._env.possible_actions)))
             # find a random action in self.config.possible_actions
-            cl.action = np.random.choice(self._config.possible_actions)
+            cl.action = self._env.possible_actions[idx]
 
         # set the time step to the current time step
         cl.time_step = self._env.time_step
@@ -172,23 +177,26 @@ class XCSR:
         return cl
 
     def _generate_prediction_dictionary(self):
+        tuple_actions = list(map(lambda a: tuple(a), self._env.possible_actions))
+
         # initialize the prediction dictionary
-        pa = {a: None for a in self._env.possible_actions}
+        pa = {a: None for a in tuple_actions}
 
         # initialize the fitness sum dictionary
-        fsa = {a: 0.0 for a in self._env.possible_actions}
+        fsa = {a: 0.0 for a in tuple_actions}
 
         for cl in self._match_set:
+            cl_action = tuple(cl.action)
             # if the value in prediction dictionary for cl.action is None
-            if pa[cl.action] is None:
+            if pa[cl_action] is None:
                 # set it by accounting for fitness and predicted_payoff
-                pa[cl.action] = cl.predicted_payoff * cl.fitness
+                pa[cl_action] = cl.predicted_payoff * cl.fitness
             else:
                 # otherwise add to the action's weighted average
-                pa[cl.action] += cl.predicted_payoff * cl.fitness
+                pa[cl_action] += cl.predicted_payoff * cl.fitness
 
             # add to the action's fitness sum
-            fsa[cl.action] += cl.fitness
+            fsa[cl_action] += cl.fitness
 
         # for each possible action
         for action in pa.keys():
@@ -207,8 +215,10 @@ class XCSR:
             # get all actions that have some predicted value
             options = [key for key, val in predictions.items() if val is not None]
 
+            idx = int(np.floor(np.random.uniform() * len(options)))
+
             # do pure exploration
-            return np.random.choice(options)
+            return options[idx]
 
         else:
             # get all actions that have some predicted value
@@ -218,11 +228,11 @@ class XCSR:
             sorted_options = sorted(options.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
 
             # return the action corresponding to the highest weighted payoff
-            return sorted_options[0][0]
+            return np.array(sorted_options[0][0])
 
     def _generate_action_set(self, action):
         # find all the classifiers in the match set which propose this action and return them
-        return [cl for cl in self._match_set if cl.action == action]
+        return [cl for cl in self._match_set if cl.matches_action(action)]
 
     def _update_set(self, _action_set, payoff):
         # for each classifier in _action_set
@@ -377,11 +387,11 @@ class XCSR:
 
     def _apply_mutation(self, child, sigma):
         # for each index in the child's predicate
-        for i in range(self._env.state_length):
+        for i in range(self._config.state_shape[0]):
             # if some random number is less than the probability of mutating an allele in the offspring
             if np.random.uniform() < self._config.mu:
                 # if the attribute at index i is already the wildcard
-                if child.predicate[i] == Classifier.WILDCARD_ATTRIBUTE_VALUE:
+                if child.predicate_i_is_wildcard(child.predicate[i]):
                     # swap it with the i-th attribute in sigma
                     child.predicate[i] = (sigma[i] - self._config.predicate_1, sigma[i] + self._config.predicate_1)
                 else:
@@ -391,10 +401,11 @@ class XCSR:
         # if some random number is less than the probability of mutating an allele in the offspring
         if np.random.uniform() < self._config.mu:
             # then generate a list of all the other possible actions
-            other_possible_actions = list(set(self._env.possible_actions) - {child.action})
+            other_possible_actions = [np.array(action) for action in map(lambda a: tuple(a), self._env.possible_actions) if action != tuple(child.action)]
 
             # assign the action of this child to that random action
-            child.action = np.random.choice(other_possible_actions)
+            idx = int(np.floor(np.random.uniform() * len(other_possible_actions)))
+            child.action = other_possible_actions[idx]
 
     def _delete_from_population(self):
         # if the number of classifiers is less than the max allowed the do nothing
@@ -427,7 +438,7 @@ class XCSR:
         for cl in self._population:
             # if the other classifier is equal to the parameter classifier in both predicate and action
 
-            if cl.predicate_subsumes(other) and cl.action == other.action:
+            if cl.predicate_subsumes(other) and cl.matches_action(other.action):
                 # then increment the other classifier's numerosity
                 cl.numerosity += 1
                 return

@@ -8,7 +8,7 @@ import logging
 class Environment:
     def __init__(self, config):
         logging.info('environment initialized')
-        self.state_length = 0
+        self.config = config
         self.possible_actions = []
         self.end_of_program = False
         self.time_step = 0
@@ -38,11 +38,7 @@ class Environment:
 
             print(self.get_state())
 
-            try:
-                action = int(input('input action: '))
-            except ValueError:
-                print('invalid action')
-                continue
+            action = input('input action: ')
 
             rho = self.step(action)
 
