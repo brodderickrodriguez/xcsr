@@ -8,6 +8,21 @@ import matplotlib.pyplot as plt
 import json
 
 
+def get_unique_from_ndarray(nda, return_as_tuples=False):
+    unique = []
+
+    for item in nda:
+        _item = tuple(item)
+
+        if _item not in unique:
+            unique.append(_item)
+
+    if return_as_tuples:
+        return unique
+    else:
+        return [np.array(itm) for itm in unique]
+
+
 def load_metric(experiment_path, metric):
     results_path = experiment_path + '/results/' + metric
     contents = os.listdir(results_path)
