@@ -1,15 +1,16 @@
 # Brodderick Rodriguez
 # Auburn University - CSSE
-# June 28 2019
+# 15 Sep 2019
 
-from xcsr.environment import Environment
 import numpy as np
 import logging
+import shutil
+import xcsr
 
 
-class Woods2Environment(Environment):
+class Woods2Environment(xcsr.Environment):
     def __init__(self, config):
-        Environment.__init__(self, config)
+        xcsr.Environment.__init__(self, config)
         logging.info('WOODS2 environment initialized')
 
         self.state_length = 8 * 3
@@ -94,3 +95,90 @@ class Woods2Environment(Environment):
 
     def termination_criteria_met(self):
         return self.time_step >= self._max_steps or self.end_of_program
+
+
+class Woods2Configuration(xcsr.Configuration):
+    def __init__(self):
+        xcsr.Configuration.__init__(self)
+
+        # the maximum number of steps in each problem (repetition)
+        self.episodes_per_repetition = 8000
+
+        self.steps_per_episode = 100
+
+        self.is_multi_step = True
+
+        self.predicate_1 = 0.29
+
+        self.predicate_delta = 0.1
+
+        # the maximum size of the population (in micro-classifiers)
+        self.N = 800
+
+        self.mu = 0.01
+        self.p_sharp = 0.5
+
+        # learning rate for payoff, epsilon, fitness, and action_set_size
+        self.beta = 0.1
+
+        # used to calculate the fitness of a classifier
+        self.alpha = 0.1
+        self.epsilon_0 = 0.01
+        self.v = 5
+
+        # discount factor
+        self.gamma = 0.9
+
+        self.chi = 0.8
+
+        self.delta = 0.1
+
+        # the GA threshold. GA is applied in a set when the average time
+        # since the last GA in the set is greater than theta_ga
+        self.theta_ga = 25
+
+        # used as initial values in new classifiers
+        self.p_1 = 10
+        self.epsilon_1 = 0
+        self.F_1 = 10
+
+        # probability during action selection of choosing the
+        # action uniform randomly
+        self.p_explr = 0.5
+
+        self.theta_mna = 8
+
+        # boolean parameter. specifies if offspring are to be tested
+        # for possible subsumption by parents
+        self.do_ga_subsumption = True
+
+        # boolean parameter. specifies if action sets are to be tested
+        # for subsuming classifiers
+        self.do_action_set_subsumption = False
+
+
+def human_play(ENV, CONFIG):
+    ENV(config=CONFIG()).human_play()
+
+
+
+def run_xcsr(ENV, CONFIG):
+    driver = xcsr.XCSRDriver()
+    driver.config_class = CONFIG
+    driver.env_class = ENV
+    driver.repetitions = 5
+    driver.save_location = '/Users/bcr/Desktop/ddd'
+    driver.experiment_name = 'TMP'
+    driver.run()
+
+    dir_name = '{}/{}'.format(driver.save_location, driver.experiment_name)
+    xcsr.util.plot_results(dir_name, title='W2', interval=50)
+    shutil.rmtree(dir_name)
+
+
+if __name__ == '__main__':
+	config = Woods2Configuration
+	env = Woods2Environment
+
+	# human_play(env, config)
+	run_xcsr(env, config)

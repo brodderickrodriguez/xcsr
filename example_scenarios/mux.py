@@ -4,6 +4,7 @@
 
 import numpy as np
 import logging
+import shutil
 import xcsr
 
 
@@ -113,10 +114,8 @@ class MuxEnvironment(xcsr.Environment):
         print(self._state)
 
 
-
 def human_play(ENV, CONFIG):
     ENV(config=CONFIG()).human_play()
-
 
 
 def run_xcsr(ENV, CONFIG):
@@ -130,8 +129,7 @@ def run_xcsr(ENV, CONFIG):
 
     dir_name = '{}/{}'.format(driver.save_location, driver.experiment_name)
     xcsr.util.plot_results(dir_name, title='MUX', interval=50)
-
-
+    shutil.rmtree(dir_name)
 
 
 if __name__ == '__main__':

@@ -1,18 +1,21 @@
 # Brodderick Rodriguez
 # Auburn University - CSSE
-# july 12 2019
+# 15 Sep 2019
 
-from xcsr.configuration import Configuration
+import numpy as np
+import logging
+import shutil
+import xcsr
 
 
-class RMUXConfiguration(Configuration):
+class RMUXConfiguration(xcsr.Configuration):
     def __init__(self):
-        Configuration.__init__(self)
+        xcsr.Configuration.__init__(self)
 
         # the maximum number of steps in each problem (repetition)
         self.episodes_per_repetition = 1
 
-        self.steps_per_episode = 10 ** 5
+        self.steps_per_episode = 10 ** 4
 
         self.is_multi_step = False
 
@@ -68,3 +71,68 @@ class RMUXConfiguration(Configuration):
         # boolean parameter. specifies if offspring are to be tested
         # for possible subsumption by parents
         self.do_ga_subsumption = True
+
+
+class RMUXEnvironment(xcsr.Environment):
+    def __init__(self, config):
+        xcsr.Environment.__init__(self, config)
+        logging.info('RMUX environment initialized')
+
+        self.state_length = 6
+        self.possible_actions = [0, 1]
+        self._set_state()
+
+    def get_state(self):
+        return self._state
+
+    def _set_state(self):
+        self._state = [np.random.uniform() for _ in range(self.state_length)]
+
+    def step(self, action):
+        self.time_step += 1
+        rho = self._determine_rho(action)
+        self._set_state()
+        return rho
+
+    def _determine_rho(self, action):
+        self.end_of_program = True
+
+        address_bits = ''.join(str(round(x)) for x in self._state[:2])
+        index_bit = int(address_bits, 2)
+        data_bit_index = index_bit + len(address_bits)
+        data_bit = round(self._state[data_bit_index])
+
+        rho = int(data_bit == action)
+        return rho
+
+    def termination_criteria_met(self):
+        return self.time_step >= self._max_steps
+
+    def print_world(self):
+        print(self._state)
+
+
+def human_play(ENV, CONFIG):
+    ENV(config=CONFIG()).human_play()
+
+
+def run_xcsr(ENV, CONFIG):
+    driver = xcsr.XCSRDriver()
+    driver.config_class = CONFIG
+    driver.env_class = ENV
+    driver.repetitions = 5
+    driver.save_location = '/Users/bcr/Desktop/ddd'
+    driver.experiment_name = 'TMP'
+    driver.run()
+
+    dir_name = '{}/{}'.format(driver.save_location, driver.experiment_name)
+    xcsr.util.plot_results(dir_name, title='RMUX', interval=50)
+    shutil.rmtree(dir_name)
+
+
+if __name__ == '__main__':
+    config = RMUXConfiguration
+    env = RMUXEnvironment
+
+    # human_play(env, config)
+    run_xcsr(env, config)
