@@ -75,7 +75,7 @@ class MUXConfiguration(xcsr.Configuration):
         self.do_ga_subsumption = True
 
 
-class MuxEnvironment(xcsr.Environment):
+class MUXEnvironment(xcsr.Environment):
     def __init__(self, config):
         xcsr.Environment.__init__(self, config)
         logging.info('MUX environment initialized')
@@ -134,7 +134,7 @@ def run_xcsr(ENV, CONFIG):
 
 if __name__ == '__main__':
     config = MUXConfiguration
-    env = MuxEnvironment
+    env = MUXEnvironment
 
     # human_play(env, config)
     run_xcsr(env, config)

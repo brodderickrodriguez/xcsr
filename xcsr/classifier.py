@@ -3,25 +3,23 @@
 # july 12 2019
 
 import numpy as np
-import copy
 
 
 class Classifier:
 	PREDICATE_MIN, PREDICATE_MAX = 0.0, 1.0
-	WILDCARD_ATTRIBUTE_VALUE = [PREDICATE_MIN, PREDICATE_MAX]
+	WILDCARD_ATTRIBUTE_VALUE = (PREDICATE_MIN, PREDICATE_MAX)
 	CLASSIFIER_ID = 0
 
-	def __init__(self, config):
+	def __init__(self, config, state_length):
 		self._id = Classifier.CLASSIFIER_ID
 		Classifier.CLASSIFIER_ID += 1
 
-		# set the current configuration
 		self._config = config
 
+		self._state_length = state_length
+
 		# condition that specifies the sensory situation which the classifier applies to
-		predicate_shape = self._config.state_shape + (2,)
-		self.predicate = np.zeros(predicate_shape)
-		self.predicate[:] = Classifier.WILDCARD_ATTRIBUTE_VALUE
+		self.predicate = [Classifier.WILDCARD_ATTRIBUTE_VALUE for _ in range(self._state_length)]
 
 		# action the classifier proposes
 		self.action = None
@@ -63,41 +61,32 @@ class Classifier:
 		return self.predicted_payoff < other.predicted_payoff
 
 	def copy(self):
-		other = copy.deepcopy(self)
+		other = Classifier(self._config, self._state_length)
+		other.__dict__ = self.__dict__
 		return other
 
 	def set_predicates(self, sigma):
-		for i in range(len(sigma)):
-			# if a random number is less than the probability of assigning a wildcard
+		# for each attribute in cl's condition
+		for i in range(self._state_length):
+			# if a random number is less than the probability of assigning a wildcard '#'
 			if np.random.uniform() < self._config.p_sharp:
-				# assign it to a wildcard 
+				# assign it to a wildcard '#'
 				self.predicate[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
 			else:
 				# otherwise, match the condition attribute in sigma
 				p_min = max(Classifier.PREDICATE_MIN, sigma[i] - np.random.uniform(high=self._config.predicate_1))
 				p_max = min(Classifier.PREDICATE_MAX, sigma[i] + np.random.uniform(high=self._config.predicate_1))
-				self.predicate[i] = [p_min, p_max]
-
-
-	def predicate_i_is_wildcard(self, predicate_i):
-		return predicate_i[0] == Classifier.PREDICATE_MIN and predicate_i[1] == Classifier.PREDICATE_MAX
+				self.predicate[i] = p_min, p_max
 
 	def matches_sigma(self, sigma):
 		for pi, si in zip(self.predicate, sigma):
-			if not self.predicate_i_is_wildcard(pi):
-				if not pi[0] <= si <= pi[1]:
-					return False
-		return True
-
-	def matches_action(self, action):
-		for ai1, ai2 in zip(self.action, action):
-			if ai1 != ai2:
+			if pi != Classifier.WILDCARD_ATTRIBUTE_VALUE and not (pi[0] <= si <= pi[1]):
 				return False
 		return True
 
 	def does_subsume(self, other):
 		# if self and other have the same action, if self is allowed to subsume and is self is more general than other
-		return self.matches_action(other.action) and self.could_subsume() and self.is_more_general(other)
+		return self.action == other.action and self.could_subsume() and self.is_more_general(other)
 
 	def predicate_subsumes(self, other):
 		for (s_p_min, s_p_max), (o_p_min, o_p_max) in zip(self.predicate, other.predicate):
@@ -107,9 +96,9 @@ class Classifier:
 
 	def is_more_general(self, other):
 		# for each attribute index i in the classifiers condition
-		for i in range(self.predicate.shape[0]):
+		for i in range(self._state_length):
 			# if the condition for cl_gen is not the wildcard nd cl_gen condition[i] does not match cl_spec condition[i]
-			if not self.predicate_i_is_wildcard(self.predicate[i]) and \
+			if self.predicate[i] != Classifier.WILDCARD_ATTRIBUTE_VALUE and \
 					(self.predicate[0] > other.predicate[0] or self.predicate[1] < other.predicate[1]):
 				# then cl_gen is not more general than cl_spec
 				return False
