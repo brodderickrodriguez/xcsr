@@ -4,22 +4,21 @@
 
 import numpy as np
 
-
 class Classifier:
 	PREDICATE_MIN, PREDICATE_MAX = 0.0, 1.0
 	WILDCARD_ATTRIBUTE_VALUE = (PREDICATE_MIN, PREDICATE_MAX)
 	CLASSIFIER_ID = 0
 
-	def __init__(self, config, state_length):
+	def __init__(self, config, state_shape):
 		self._id = Classifier.CLASSIFIER_ID
 		Classifier.CLASSIFIER_ID += 1
 
 		self._config = config
 
-		self._state_length = state_length
+		self._state_shape = state_shape
 
 		# condition that specifies the sensory situation which the classifier applies to
-		self.predicate = [Classifier.WILDCARD_ATTRIBUTE_VALUE for _ in range(self._state_length)]
+		self.predicate = [Classifier.WILDCARD_ATTRIBUTE_VALUE for _ in range(self._state_shape[0])]
 
 		# action the classifier proposes
 		self.action = None
@@ -61,13 +60,13 @@ class Classifier:
 		return self.predicted_payoff < other.predicted_payoff
 
 	def copy(self):
-		other = Classifier(self._config, self._state_length)
+		other = Classifier(self._config, self._state_shape)
 		other.__dict__ = self.__dict__
 		return other
 
 	def set_predicates(self, sigma):
 		# for each attribute in cl's condition
-		for i in range(self._state_length):
+		for i in range(self._state_shape[0]):
 			# if a random number is less than the probability of assigning a wildcard '#'
 			if np.random.uniform() < self._config.p_sharp:
 				# assign it to a wildcard '#'
@@ -96,7 +95,7 @@ class Classifier:
 
 	def is_more_general(self, other):
 		# for each attribute index i in the classifiers condition
-		for i in range(self._state_length):
+		for i in range(self._state_shape[0]):
 			# if the condition for cl_gen is not the wildcard nd cl_gen condition[i] does not match cl_spec condition[i]
 			if self.predicate[i] != Classifier.WILDCARD_ATTRIBUTE_VALUE and \
 					(self.predicate[0] > other.predicate[0] or self.predicate[1] < other.predicate[1]):

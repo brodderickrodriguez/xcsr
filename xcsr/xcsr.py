@@ -147,7 +147,7 @@ class XCSR:
 
     def _generate_covering_classifier(self, _match_set, sigma):
         # initialize new classifier
-        cl = Classifier(config=self._config, state_length=self._env.state_length)
+        cl = Classifier(config=self._config, state_shape=self._env.state_shape)
 
         # set the covering classifier's predicate
         cl.set_predicates(sigma)
@@ -161,10 +161,12 @@ class XCSR:
         # if there are possible actions that are not in the actions_found
         if len(difference_actions) > 0:
             # find a random action in difference_actions
-            cl.action = np.random.choice(difference_actions)
+            choice = np.random.choice(len(difference_actions))
+            cl.action = difference_actions[choice]
         else:
             # find a random action in self.config.possible_actions
-            cl.action = np.random.choice(self._config.possible_actions)
+            choice = np.random.choice(len(self._env.possible_actions))
+            cl.action = self._env.possible_actions[choice]
 
         # set the time step to the current time step
         cl.time_step = self._env.time_step
@@ -208,7 +210,8 @@ class XCSR:
             options = [key for key, val in predictions.items() if val is not None]
 
             # do pure exploration
-            return np.random.choice(options)
+            choice = np.random.choice(len(options))
+            return options[choice]
 
         else:
             # get all actions that have some predicted value
@@ -377,7 +380,7 @@ class XCSR:
 
     def _apply_mutation(self, child, sigma):
         # for each index in the child's predicate
-        for i in range(self._env.state_length):
+        for i in range(self._env.state_shape[0]):
             # if some random number is less than the probability of mutating an allele in the offspring
             if np.random.uniform() < self._config.mu:
                 # if the attribute at index i is already the wildcard
@@ -394,7 +397,8 @@ class XCSR:
             other_possible_actions = list(set(self._env.possible_actions) - {child.action})
 
             # assign the action of this child to that random action
-            child.action = np.random.choice(other_possible_actions)
+            choice = np.random.choice(len(other_possible_actions))
+            child.action = other_possible_actions[choice]
 
     def _delete_from_population(self):
         # if the number of classifiers is less than the max allowed the do nothing

@@ -8,8 +8,8 @@ import numpy as np
 class Configuration:
     def __init__(self):
 
-        # the maximum number of steps in each problem (repetition)
-        self.episodes_per_repetition = 10 ** 4
+        # the maximum number of steps in each problem (replication)
+        self.episodes_per_replication = 10 ** 4
 
         self.steps_per_episode = 1
 
