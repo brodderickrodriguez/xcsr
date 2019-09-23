@@ -19,7 +19,7 @@ class XCSRDriver:
 
         self.config_class = None
         self.env_class = None
-        self.repetitions = 10
+        self.replications = 10
         self.save_location = './'
         self.experiment_name = None
         self._root_data_directory = None
@@ -37,9 +37,9 @@ class XCSRDriver:
         logging.info('XCSDriver ran all processes')
 
     def _check_arguments(self):
-        # check if the number of repetitions is at least 1
-        if self.repetitions < 1:
-            raise ValueError('repetitions cannot be less than 1')
+        # check if the number of replications is at least 1
+        if self.replications < 1:
+            raise ValueError('replications cannot be less than 1')
 
         # check if user specified a configuration
         if self.config_class is None:
@@ -68,7 +68,7 @@ class XCSRDriver:
 
         metadata_file = self._root_data_directory + '/metadata.json'
         metadata = {key: val for key, val in self.config_class().__dict__.items()}
-        metadata['repetitions'] = self.repetitions
+        metadata['replications'] = self.replications
         metadata['name'] = self.experiment_name
         metadata['root_dir'] = self._root_data_directory
         metadata['start_time'] = time_now
@@ -80,22 +80,22 @@ class XCSRDriver:
         if self.config_class().is_multi_step:
             processes = []
 
-            for process in range(self.repetitions):
-                process = multiprocessing.Process(target=self._run_multi_step_repetition, args=(process,))
+            for process in range(self.replications):
+                process = multiprocessing.Process(target=self._run_multi_step_replication, args=(process,))
                 processes.append(process)
                 process.start()
 
             print('queued all processes')
 
-            for process in range(min(self.repetitions, len(processes))):
+            for process in range(min(self.replications, len(processes))):
                 processes[process].join()
                 print('joined process', process)
         else:
-            for process in range(self.repetitions):
-                self._run_single_step_repetition(process)
+            for process in range(self.replications):
+                self._run_single_step_replication(process)
 
-    def _run_single_step_repetition(self, repetition_num):
-        print('repetition {} started'.format(repetition_num))
+    def _run_single_step_replication(self, replication_num):
+        print('replication {} started'.format(replication_num))
 
         config = self.config_class()
         env = self.env_class(config=config)
@@ -103,7 +103,7 @@ class XCSRDriver:
         xcs_object = XCSR(env=env, config=config)
         xcs_object.run_experiment()
 
-        self._save_repetition(xcs_object.metrics_history, repetition_num)
+        self._save_replication(xcs_object.metrics_history, replication_num)
 
     @staticmethod
     def _post_process_episode(config, episode_metrics):
@@ -117,8 +117,8 @@ class XCSRDriver:
 
         return _dict
 
-    def _run_multi_step_repetition(self, repetition_num):
-        print('repetition {} started'.format(repetition_num))
+    def _run_multi_step_replication(self, replication_num):
+        print('replication {} started'.format(replication_num))
 
         config = self.config_class()
         env = self.env_class(config=config)
@@ -126,7 +126,7 @@ class XCSRDriver:
 
         xcs_object = XCSR(env=env, config=config)
 
-        while i < config.episodes_per_repetition:
+        while i < config.episodes_per_replication:
             env.reset()
             xcs_object.reset_metrics()
 
@@ -145,15 +145,15 @@ class XCSRDriver:
             for key, value in data.items():
                 metrics_compiled[key].append(value)
 
-        self._save_repetition(metrics_compiled, repetition_num)
+        self._save_replication(metrics_compiled, replication_num)
 
-    def _save_repetition(self, metrics, repetition_num):
+    def _save_replication(self, metrics, replication_num):
         # the path to where results are stored
         path = self._root_data_directory + '/results/'
 
         for key in metrics.keys():
             # the filename where we will store this metric
-            filename = path + key + '/repetition' + str(repetition_num) + '.csv'
+            filename = path + key + '/replication' + str(replication_num) + '.csv'
 
             if type(metrics[key]) is int:
                 metrics[key] = [metrics[key]]
@@ -161,4 +161,4 @@ class XCSRDriver:
             data = np.array(metrics[key])
             np.savetxt(filename, data, delimiter=',')
 
-        print('repetition {} done'.format(repetition_num))
+        print('replication {} done'.format(replication_num))
