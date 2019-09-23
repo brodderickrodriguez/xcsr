@@ -12,8 +12,8 @@ class Woods2Configuration(xcsr.Configuration):
     def __init__(self):
         xcsr.Configuration.__init__(self)
 
-        # the maximum number of steps in each problem (repetition)
-        self.episodes_per_repetition = 8000
+        # the maximum number of steps in each problem (replication)
+        self.episodes_per_replication = 8000
 
         self.steps_per_episode = 100
 
@@ -73,8 +73,9 @@ class Woods2Environment(xcsr.Environment):
         xcsr.Environment.__init__(self, config)
         logging.info('WOODS2 environment initialized')
 
-        self.state_length = 8 * 3
-        self.possible_actions = [i for i in range(8)]
+        self.state_shape = (8 * 3,)
+        self.action_shape = (1,)
+        self.possible_actions = [(i,) for i in range(8)]
         self._loc_x = None
         self._loc_y = None
 
@@ -115,6 +116,7 @@ class Woods2Environment(xcsr.Environment):
 
     def step(self, action):
         self.time_step += 1
+        action = action[0]
         dy, dx = self._action_map()[action]
 
         new_y = (self._loc_y + dy) % self.state.shape[0]
@@ -165,8 +167,8 @@ def run_xcsr(ENV, CONFIG):
     driver = xcsr.XCSRDriver()
     driver.config_class = CONFIG
     driver.env_class = ENV
-    driver.repetitions = 5
-    driver.save_location = '/Users/bcr/Desktop/ddd'
+    driver.replications = 5
+    driver.save_location = '/Users/bcr/Desktop/'
     driver.experiment_name = 'TMP'
     driver.run()
 

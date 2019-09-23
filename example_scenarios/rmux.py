@@ -12,8 +12,8 @@ class RMUXConfiguration(xcsr.Configuration):
     def __init__(self):
         xcsr.Configuration.__init__(self)
 
-        # the maximum number of steps in each problem (repetition)
-        self.episodes_per_repetition = 1
+        # the maximum number of steps in each problem (replication)
+        self.episodes_per_replication = 1
 
         self.steps_per_episode = 10 ** 4
 
@@ -78,15 +78,16 @@ class RMUXEnvironment(xcsr.Environment):
         xcsr.Environment.__init__(self, config)
         logging.info('RMUX environment initialized')
 
-        self.state_length = 6
-        self.possible_actions = [0, 1]
+        self.state_shape = (6,)
+        self.action_shape = (1,)
+        self.possible_actions = [(0,), (1,)]
         self._set_state()
 
     def get_state(self):
         return self._state
 
     def _set_state(self):
-        self._state = [np.random.uniform() for _ in range(self.state_length)]
+        self._state = [np.random.uniform() for _ in range(self.state_shape[0])]
 
     def step(self, action):
         self.time_step += 1
@@ -102,7 +103,7 @@ class RMUXEnvironment(xcsr.Environment):
         data_bit_index = index_bit + len(address_bits)
         data_bit = round(self._state[data_bit_index])
 
-        rho = int(data_bit == action)
+        rho = int(data_bit == action[0])
         return rho
 
     def termination_criteria_met(self):
@@ -120,8 +121,8 @@ def run_xcsr(ENV, CONFIG):
     driver = xcsr.XCSRDriver()
     driver.config_class = CONFIG
     driver.env_class = ENV
-    driver.repetitions = 5
-    driver.save_location = '/Users/bcr/Desktop/ddd'
+    driver.replications = 5
+    driver.save_location = '/Users/bcr/Desktop/'
     driver.experiment_name = 'TMP'
     driver.run()
 
