@@ -69,8 +69,8 @@ class Woods2Configuration(xcsr.Configuration):
 
 
 class Woods2Environment(xcsr.Environment):
-    def __init__(self, config):
-        xcsr.Environment.__init__(self, config)
+    def __init__(self, config, *args):
+        xcsr.Environment.__init__(self, config, args)
         logging.info('WOODS2 environment initialized')
 
         self.state_shape = (8 * 3,)

@@ -74,8 +74,8 @@ class RMUXConfiguration(xcsr.Configuration):
 
 
 class RMUXEnvironment(xcsr.Environment):
-    def __init__(self, config):
-        xcsr.Environment.__init__(self, config)
+    def __init__(self, config, *args):
+        xcsr.Environment.__init__(self, config, args)
         logging.info('RMUX environment initialized')
 
         self.state_shape = (6,)

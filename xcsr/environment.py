@@ -6,7 +6,7 @@ import logging
 
 
 class Environment:
-    def __init__(self, config):
+    def __init__(self, config, *args):
         logging.info('environment initialized')
         self.state_shape = (0,)
         self.action_shape = (1,)

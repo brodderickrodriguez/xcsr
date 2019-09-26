@@ -76,8 +76,8 @@ class MUXConfiguration(xcsr.Configuration):
 
 
 class MUXEnvironment(xcsr.Environment):
-    def __init__(self, config):
-        xcsr.Environment.__init__(self, config)
+    def __init__(self, config, *args):
+        xcsr.Environment.__init__(self, config, args)
         logging.info('MUX environment initialized')
 
         self.state_shape = (6,)

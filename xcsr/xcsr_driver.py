@@ -19,6 +19,7 @@ class XCSRDriver:
 
         self.config_class = None
         self.env_class = None
+        self.env_args = None
         self.replications = 10
         self.save_location = './'
         self.experiment_name = None
@@ -98,7 +99,7 @@ class XCSRDriver:
         print('replication {} started'.format(replication_num))
 
         config = self.config_class()
-        env = self.env_class(config=config)
+        env = self.env_class(config, self.env_args)
 
         xcs_object = XCSR(env=env, config=config)
         xcs_object.run_experiment()
