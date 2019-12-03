@@ -11,6 +11,7 @@ import logging
 import os
 import time
 import json
+import pickle
 
 
 class XCSRDriver:
@@ -104,7 +105,9 @@ class XCSRDriver:
         xcs_object = XCSR(env=env, config=config)
         xcs_object.run_experiment()
 
-        self._save_replication(xcs_object.metrics_history, replication_num)
+        self._save_replication(xcs_object, replication_num)
+
+        # self._save_replication(xcs_object.metrics_history, replication_num)
 
     @staticmethod
     def _post_process_episode(config, episode_metrics):
@@ -146,9 +149,23 @@ class XCSRDriver:
             for key, value in data.items():
                 metrics_compiled[key].append(value)
 
-        self._save_replication(metrics_compiled, replication_num)
+        # self._save_replication(metrics_compiled, replication_num)
 
-    def _save_replication(self, metrics, replication_num):
+
+    def _save_replication(self, xcs_object, replication_num):
+        self.__save_replication_metrics(xcs_object.metrics_history, replication_num)
+
+        pop = xcs_object.get_population()
+
+        path = self._root_data_directory + '/classifiers'
+
+        f_name = '{}/replication{}'.format(path, replication_num)
+
+        with open(f_name, 'wb') as f:
+            pickle.dump(pop, f)
+
+
+    def _save_replication_metrics(self, metrics, replication_num):
         # the path to where results are stored
         path = self._root_data_directory + '/results/'
 

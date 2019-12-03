@@ -77,7 +77,7 @@ class MUXConfiguration(xcsr.Configuration):
 
 class MUXEnvironment(xcsr.Environment):
     def __init__(self, config, *args):
-        xcsr.Environment.__init__(self, config, args)
+        xcsr.Environment.__init__(self, config)
         logging.info('MUX environment initialized')
 
         self.state_shape = (6,)
@@ -129,7 +129,7 @@ def run_xcsr(ENV, CONFIG):
     driver.run()
 
     dir_name = '{}/{}'.format(driver.save_location, driver.experiment_name)
-    xcsr.util.plot_results(dir_name, title='MUX', interval=50)
+    xcsr.util.plot_results(dir_name, title='', interval=50)
     shutil.rmtree(dir_name)
 
 
