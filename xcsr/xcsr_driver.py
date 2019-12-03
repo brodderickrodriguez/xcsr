@@ -153,7 +153,7 @@ class XCSRDriver:
 
 
     def _save_replication(self, xcs_object, replication_num):
-        self.__save_replication_metrics(xcs_object.metrics_history, replication_num)
+        self._save_replication_metrics(xcs_object.metrics_history, replication_num)
 
         pop = xcs_object.get_population()
 
