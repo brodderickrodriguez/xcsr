@@ -159,6 +159,8 @@ class XCSRDriver:
 
         path = self._root_data_directory + '/classifiers'
 
+        print(path)
+
         f_name = '{}/replication{}'.format(path, replication_num)
 
         with open(f_name, 'wb') as f:
