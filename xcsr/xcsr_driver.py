@@ -35,8 +35,8 @@ class XCSRDriver:
         self._setup_directories()
         logging.info('XCSDriver created directory: {}'.format(self._root_data_directory))
 
-        self._run_processes()
-        logging.info('XCSDriver ran all processes')
+        logging.info('XCSDriver running all processes')
+        return self._run_processes()
 
     def _check_arguments(self):
         # check if the number of replications is at least 1
@@ -93,8 +93,11 @@ class XCSRDriver:
                 processes[process].join()
                 print('joined process', process)
         else:
+            classifiers = []
             for process in range(self.replications):
-                self._run_single_step_replication(process)
+                c = self._run_single_step_replication(process)
+                classifiers.append(c)
+            return classifiers
 
     def _run_single_step_replication(self, replication_num):
         print('replication {} started'.format(replication_num))
@@ -106,6 +109,8 @@ class XCSRDriver:
         xcs_object.run_experiment()
 
         self._save_replication(xcs_object, replication_num)
+
+        return xcs_object.get_population()
 
         # self._save_replication(xcs_object.metrics_history, replication_num)
 
