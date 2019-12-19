@@ -93,6 +93,9 @@ def _best_fit_line(x, y):
 def _plot(data, labels, interval, title, experiment_path, generate_only):
     data_plots = [[] for _ in range(len(data) + 1)]
 
+    _best_fit_line(data_plots[0], data_plots[1])
+    _best_fit_line(data_plots[0], data_plots[2])
+
     for xi in range(interval, len(data[0]), interval):
         data_plots[0].append(xi / 1000)
 
@@ -102,9 +105,6 @@ def _plot(data, labels, interval, title, experiment_path, generate_only):
 
     for j in range(len(data_plots) - 1):
         plt.plot(data_plots[0], data_plots[j + 1], label=labels[j])
-
-    _best_fit_line(data_plots[0], data_plots[1])
-    _best_fit_line(data_plots[0], data_plots[2])
 
     # plt.errorbar(data_plots[0], data_plots[1], yerr=0.1, ecolor='lightgray')
 
