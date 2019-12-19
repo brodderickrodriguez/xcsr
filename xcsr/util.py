@@ -69,13 +69,13 @@ def _is_multi_step_environment(experiment_path):
     return json_data['is_multi_step']
 
 
-def plot_results(experiment_path, interval=50, title=''):
+def plot_results(experiment_path, interval=50, title='', generate_only=False):
     if _is_multi_step_environment(experiment_path):
         data, labels = _get_data_multi_step(experiment_path)
     else:
         data, labels = _get_data_single_step(experiment_path)
 
-    _plot(data, labels, interval, title, experiment_path)
+    _plot(data, labels, interval, title, experiment_path, generate_only)
 
 
 def _best_fit_line(x, y):
@@ -90,7 +90,7 @@ def _best_fit_line(x, y):
     plt.plot(x, y_fit, label=lbl)
 
 
-def _plot(data, labels, interval, title, experiment_path):
+def _plot(data, labels, interval, title, experiment_path, generate_only):
     data_plots = [[] for _ in range(len(data) + 1)]
 
     for xi in range(interval, len(data[0]), interval):
@@ -112,5 +112,9 @@ def _plot(data, labels, interval, title, experiment_path):
     plt.xlabel('episodes (thousands)')
     plt.title(title)
     plt.gca().legend()
-    plt.savefig(experiment_path + '/results.png')
-    plt.show()
+    # plt.savefig(experiment_path + '/results.png')
+
+    if not generate_only:
+        plt.show()
+
+    return plt
