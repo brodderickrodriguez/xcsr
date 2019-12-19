@@ -75,7 +75,7 @@ def plot_results(experiment_path, interval=50, title='', generate_only=False):
     else:
         data, labels = _get_data_single_step(experiment_path)
 
-    _plot(data, labels, interval, title, experiment_path, generate_only)
+    return _plot(data, labels, interval, title, experiment_path, generate_only)
 
 
 def _best_fit_line(x, y):
