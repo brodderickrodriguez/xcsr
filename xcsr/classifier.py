@@ -77,7 +77,7 @@ class Classifier:
 
 	def force_set_predicate_i(self, i, p_min, p_max):
 		# p_max = min(self.PREDICATE_MAX, p_max)
-		p_min = max(self.PREDICATE_MIN, p_min)
+		# p_min = max(self.PREDICATE_MIN, p_min)
 		p_min = min(p_max, p_min)
 		self.predicate[i] = p_min, p_max
 
