@@ -82,10 +82,9 @@ class Classifier:
 		self.predicate[i] = p_min, p_max
 
 	def matches_sigma(self, sigma):
-		for pi, si in zip(self.predicate, sigma):
-			if pi != Classifier.WILDCARD_ATTRIBUTE_VALUE and not (pi[0] <= si <= pi[1]):
-				return False
-		return True
+		items = zip(self.predicate, sigma)
+		m = map(lambda x: x[0][0] <= x[1] <= x[0][1], items)
+		return all(m)
 
 	def does_subsume(self, other):
 		# if self and other have the same action, if self is allowed to subsume and is self is more general than other
