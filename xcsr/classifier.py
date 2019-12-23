@@ -84,8 +84,6 @@ class Classifier:
 	def matches_sigma(self, sigma):
 		items = zip(self.predicate, sigma)
 		m = map(lambda x: x[0][0] <= x[1] <= x[0][1], items)
-
-		print('sigma: {} pred: {} match: {}'.format(sigma, self.predicate, all(m)))
 		return all(m)
 
 	def does_subsume(self, other):
