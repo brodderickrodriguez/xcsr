@@ -4,8 +4,9 @@
 
 import numpy as np
 
+
 class Classifier:
-	PREDICATE_MIN, PREDICATE_MAX = 0.0, 1.0
+	PREDICATE_MIN, PREDICATE_MAX = 0.0, 0.0
 	WILDCARD_ATTRIBUTE_VALUE = (PREDICATE_MIN, PREDICATE_MAX)
 	CLASSIFIER_ID = 0
 
@@ -18,7 +19,7 @@ class Classifier:
 		self._state_shape = state_shape
 
 		# condition that specifies the sensory situation which the classifier applies to
-		self.predicate = [Classifier.WILDCARD_ATTRIBUTE_VALUE for _ in range(self._state_shape[0])]
+		self.predicate = [None for _ in range(self._state_shape[0])]
 
 		# action the classifier proposes
 		self.action = None
@@ -65,16 +66,16 @@ class Classifier:
 		return other
 
 	def set_predicates(self, sigma):
-		# for each attribute in cl's condition
 		for i in range(self._state_shape[0]):
-			# if a random number is less than the probability of assigning a wildcard '#'
-			if np.random.uniform() >= self._config.p_sharp:
+			if np.random.uniform() < self._config.p_sharp:
+				self.predicate[i] = self.WILDCARD_ATTRIBUTE_VALUE
+			else:
 				h = self._config.predicate_1
 
-				p_min = max(Classifier.PREDICATE_MIN, sigma[i] - np.random.uniform(high=h))
-				p_max = min(Classifier.PREDICATE_MAX, sigma[i] + np.random.uniform(high=h))
+				p_min = max(self.PREDICATE_MIN, sigma[i] - np.random.uniform(high=h))
+				p_max = min(self.PREDICATE_MAX, sigma[i] + np.random.uniform(high=h))
 				p_min = min(p_max, p_min)
-				
+
 				self.predicate[i] = p_min, p_max
 
 	def matches_sigma(self, sigma):
