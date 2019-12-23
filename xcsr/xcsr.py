@@ -25,6 +25,8 @@ class XCSR:
 
         # the environment object
         self._env = env
+        # Classifier.PREDICATE_MAX = self._env.max_value
+        # print('wildcard', Classifier.WILDCARD_ATTRIBUTE_VALUE)
 
         # the current configuration for hyper params
         self._config = config
