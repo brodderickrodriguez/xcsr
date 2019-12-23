@@ -71,12 +71,15 @@ class Classifier:
 				self.predicate[i] = self.WILDCARD_ATTRIBUTE_VALUE
 			else:
 				h = self._config.predicate_1
+				p_min = sigma[i] - np.random.uniform(high=h)
+				p_max = sigma[i] + np.random.uniform(high=h)
+				self.force_set_predicate_i(i, p_min, p_max)
 
-				p_min = max(self.PREDICATE_MIN, sigma[i] - np.random.uniform(high=h))
-				p_max = min(self.PREDICATE_MAX, sigma[i] + np.random.uniform(high=h))
-				p_min = min(p_max, p_min)
-
-				self.predicate[i] = p_min, p_max
+	def force_set_predicate_i(self, i, p_min, p_max):
+		p_max = min(self.PREDICATE_MAX, p_max)
+		p_min = max(self.PREDICATE_MIN, p_min)
+		p_min = min(p_max, p_min)
+		self.predicate[i] = p_min, p_max
 
 	def matches_sigma(self, sigma):
 		for pi, si in zip(self.predicate, sigma):
