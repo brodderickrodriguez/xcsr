@@ -154,8 +154,6 @@ class XCSR:
         # set the covering classifier's predicate
         cl.set_predicates(sigma)
 
-        print('new CL pred is ', cl.predicate, 'sigma:' , sigma)
-
         # get all the unique actions found in the match_set
         actions_found = set([cl.action for cl in _match_set])
 
