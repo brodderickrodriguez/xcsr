@@ -75,7 +75,7 @@ class Classifier:
 				# otherwise, match the condition attribute in sigma
 				p_min = max(Classifier.PREDICATE_MIN, sigma[i] - np.random.uniform(high=self._config.predicate_1))
 				p_max = min(Classifier.PREDICATE_MAX, sigma[i] + np.random.uniform(high=self._config.predicate_1))
-				self.predicate[i] = p_min, p_max
+				# self.predicate[i] = p_min, p_max
 
 	def matches_sigma(self, sigma):
 		for pi, si in zip(self.predicate, sigma):
