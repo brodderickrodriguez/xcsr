@@ -390,8 +390,7 @@ class XCSR:
                     # swap it with the i-th attribute in sigma
                     p_min = sigma[i] - self._config.predicate_1
                     p_max = sigma[i] + self._config.predicate_1
-
-                    child.predicate[i] = p_min, p_max
+                    child.force_set_predicate_i(i, p_min, p_max)
                 else:
                     # otherwise, swap it to the wildcard
                     child.predicate[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
