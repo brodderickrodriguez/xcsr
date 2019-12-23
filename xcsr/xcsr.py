@@ -386,7 +386,8 @@ class XCSR:
                 # if the attribute at index i is already the wildcard
                 if child.predicate[i] == Classifier.WILDCARD_ATTRIBUTE_VALUE:
                     # swap it with the i-th attribute in sigma
-                    child.predicate[i] = (sigma[i] - self._config.predicate_1, sigma[i] + self._config.predicate_1)
+                    pass
+                    # child.predicate[i] = (sigma[i] - self._config.predicate_1, sigma[i] + self._config.predicate_1)
                 else:
                     # otherwise, swap it to the wildcard
                     child.predicate[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
