@@ -13,6 +13,7 @@ class Environment:
         self.possible_actions = [(None,)]
         self.end_of_program = False
         self.time_step = 0
+        self.max_value = 1.0
 
         self._max_steps = config.steps_per_episode
         self._state = None
