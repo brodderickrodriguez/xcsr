@@ -68,14 +68,14 @@ class Classifier:
 		# for each attribute in cl's condition
 		for i in range(self._state_shape[0]):
 			# if a random number is less than the probability of assigning a wildcard '#'
-			if np.random.uniform() < self._config.p_sharp:
-				# assign it to a wildcard '#'
-				self.predicate[i] = Classifier.WILDCARD_ATTRIBUTE_VALUE
-			else:
-				# otherwise, match the condition attribute in sigma
-				p_min = max(Classifier.PREDICATE_MIN, sigma[i] - np.random.uniform(high=self._config.predicate_1))
-				p_max = min(Classifier.PREDICATE_MAX, sigma[i] + np.random.uniform(high=self._config.predicate_1))
-				# self.predicate[i] = p_min, p_max
+			if np.random.uniform() >= self._config.p_sharp:
+				h = self._config.predicate_1
+
+				p_min = max(Classifier.PREDICATE_MIN, sigma[i] - np.random.uniform(high=h))
+				p_max = min(Classifier.PREDICATE_MAX, sigma[i] + np.random.uniform(high=h))
+				p_min = min(p_max, p_min)
+				
+				self.predicate[i] = p_min, p_max
 
 	def matches_sigma(self, sigma):
 		for pi, si in zip(self.predicate, sigma):
