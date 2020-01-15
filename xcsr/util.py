@@ -23,7 +23,9 @@ def load_metric(experiment_path, metric):
     data[data == 0] = np.nan
 
     for i, file in enumerate(contents[1:]):
-        data[i + 1] = np.loadtxt(results_path + '/' + file, delimiter=',')
+        r = np.loadtxt(results_path + '/' + file, delimiter=',')
+        # r = np.pad(r, r.shape[0] - data.shape[1], 'constant', constant_values=(np.nan))
+        data[i + 1] = r
 
     return data
 
@@ -45,7 +47,7 @@ def _get_data_single_step(experiment_path):
     cc_means = np.nanmean(cc, axis=0) / 2000
 
     data = rhos_means, error_means, cc_means
-    labels = 'reward', 'error', 'pop. size (/1000)'
+    labels = 'reward', 'error', 'pop. size (/100)'
     return data, labels
 
 
@@ -94,7 +96,7 @@ def _plot(data, labels, interval, title, experiment_path, generate_only):
     data_plots = [[] for _ in range(len(data) + 1)]
 
     for xi in range(interval, len(data[0]), interval):
-        data_plots[0].append(xi / 1000)
+        data_plots[0].append(xi / 100)
 
         for j in range(len(data)):
             d = np.mean(data[j][xi - interval: xi])

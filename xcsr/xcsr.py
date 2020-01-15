@@ -204,6 +204,8 @@ class XCSR:
         return pa
 
     def _select_action(self, predictions):
+        self._config.p_explr -= self._config.p_explr / self._config.steps_per_episode
+
         # select action according to an epsilon-greedy policy
         if np.random.uniform() < self._config.p_explr:
             logging.debug('selecting random action...')
