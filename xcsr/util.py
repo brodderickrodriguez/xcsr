@@ -44,7 +44,7 @@ def _get_data_single_step(experiment_path):
 
     rhos_means = np.nanmean(rhos, axis=0)
     error_means = np.nanmean(error, axis=0)
-    cc_means = np.nanmean(cc, axis=0) / 2000
+    cc_means = np.nanmean(cc, axis=0) / 100
 
     data = rhos_means, error_means, cc_means
     labels = 'reward', 'error', 'pop. size (/100)'
@@ -72,6 +72,7 @@ def _is_multi_step_environment(experiment_path):
 
 
 def plot_results(experiment_path, interval=50, title='', generate_only=False):
+    interval=100
     if _is_multi_step_environment(experiment_path):
         data, labels = _get_data_multi_step(experiment_path)
     else:
@@ -80,7 +81,7 @@ def plot_results(experiment_path, interval=50, title='', generate_only=False):
     return _plot(data, labels, interval, title, experiment_path, generate_only)
 
 
-def _best_fit_line(x, y):
+def _best_fit_line(x, y, ax):
     x_bar, y_bar = np.mean(x), np.mean(y)
     mn = sum([(xi - x_bar) * (yi - y_bar) for xi, yi in zip(x, y)])
     md = sum([(xi - x_bar) ** 2 for xi in x])
@@ -89,11 +90,14 @@ def _best_fit_line(x, y):
 
     y_fit = [b + xi * m for xi in x]
     lbl = 'y = {:.2f} + {:.10f}x'.format(b, m)
-    plt.plot(x, y_fit, label=lbl, linestyle=':')
+    ax.plot(x, y_fit, label=lbl, linestyle=':')
 
 
 def _plot(data, labels, interval, title, experiment_path, generate_only):
     data_plots = [[] for _ in range(len(data) + 1)]
+
+    fig, ax = plt.subplots()
+
 
     for xi in range(interval, len(data[0]), interval):
         data_plots[0].append(xi / 100)
@@ -103,17 +107,24 @@ def _plot(data, labels, interval, title, experiment_path, generate_only):
             data_plots[j + 1].append(d)
 
     for j in range(len(data_plots) - 1):
-        plt.plot(data_plots[0], data_plots[j + 1], label=labels[j])
+        ax.plot(data_plots[0], data_plots[j + 1], label=labels[j])
 
-    _best_fit_line(data_plots[0], data_plots[1])
-    _best_fit_line(data_plots[0], data_plots[2])
+    _best_fit_line(data_plots[0], data_plots[1], ax)
+    _best_fit_line(data_plots[0], data_plots[2], ax)
 
     # plt.errorbar(data_plots[0], data_plots[1], yerr=0.1, ecolor='lightgray')
 
     plt.grid(True)
     plt.xlabel('episodes (thousands)')
     plt.title(title)
-    plt.gca().legend()
+    # plt.gca().legend()
+
+
+    ax.legend(loc='lower left', bbox_to_anchor=(0.0, 1.01), ncol=2,
+              borderaxespad=0, frameon=False)
+
+    plt.show()
+
     # plt.savefig(experiment_path + '/results.png')
 
     if not generate_only:
